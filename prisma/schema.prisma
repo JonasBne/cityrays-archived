@@ -14,19 +14,77 @@ datasource db {
 // https://www.prisma.io/docs/guides/database/using-prisma-with-mongodb
 // https://www.prisma.io/docs/concepts/components/prisma-client/composite-types
 
-model Example {
-    id        String    @id @default(auto()) @map("_id") @db.ObjectId
-    name      String
-    address   Address? // embedded address type
-    createdAt DateTime  @default(now())
-    updatedAt DateTime? @updatedAt
+model Outlet {
+  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
+  name                  String      @unique
+  street                String
+  houseNumber           String
+  city                  String
+  zipCode               String
+  category              String
+  latitude              String      @unique
+  longitude             String      @unique
+  openingHours          OpeningHour[]
+  sunlightHours         SunlightHour[]
+  outletSunlightHours   OutletSunlightHour[]
+  published             Boolean?    @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 }
 
-type Address {
-    street String
-    city   String
-    zip    String
+model OpeningHour {
+  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
+  outlet                Outlet      @relation(fields: [outletId], references: [id]) // many-to-1
+  outletId              String      @db.ObjectId
+  weekDay               String
+  openAt                String?
+  closesAt              String?
+  closed                Boolean?
+  published             Boolean?    @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  @@unique([outletId, weekDay], name: "outletIdWeekday")
 }
+
+model OutletSunlightHour {
+  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
+  outlet                Outlet      @relation(fields: [outletId], references: [id]) // many-to-1
+  outletId              String      @db.ObjectId
+  yearPeriod            YearPeriod  @relation(fields: [yearPeriodId], references: [id]) // many-to-1
+  yearPeriodId          String      @db.ObjectId
+  sunlightHours         SunlightHour[]
+  published             Boolean?    @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  @@unique([yearPeriodId, outletId], name: "yearPeriodOutletId")
+}
+
+model YearPeriod {
+  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
+  startDate             DateTime     @unique
+  endDate               DateTime
+  outletSunlightHours   OutletSunlightHour[] // 1-to-many
+  published             Boolean?    @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+}
+
+model SunlightHour {
+  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
+  outletSunlightHour    OutletSunlightHour @relation(fields: [outletSunlightHourId], references: [id]) // many-to-1
+  outletSunlightHourId  String      @db.ObjectId
+  startTime             String
+  endTime               String
+  outlet                Outlet?     @relation(fields: [outletId], references: [id])
+  outletId              String?     @db.ObjectId
+  published             Boolean?    @default(true)
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
+  @@unique([outletSunlightHourId, startTime], name: "outletSunlightHourIdStartTime")
+}
+
+
+
 
 // Optional models for next/auth
 //
