@@ -1,8 +1,10 @@
 import * as xlsx from "xlsx";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
+import { filesDirectoryPath } from "@/config/paths";
+import { PrismaClient } from "@prisma/client";
 
-const directoryPath = "../../cityrays-files";
+const prisma = new PrismaClient();
 
 function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
@@ -14,11 +16,11 @@ function parseFile(filePath: string) {
 
 void (async () => {
   try {
-    const files = await readdir(path.join(process.cwd(), directoryPath));
+    const files = await readdir(path.join(process.cwd(), filesDirectoryPath));
     console.log("files", files);
 
     for (const file of files) {
-      const filePath = path.join(directoryPath, file);
+      const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
     }
   } catch (err) {

@@ -37,14 +37,9 @@ type OpeningHour {
 
 type SunlightHour {
   id            String
-  yearPeriod    YearPeriod
+  startDate     String
+  endDate       String  
   outletSunlightHours OutletSunlightHour[]
-}
-
-type YearPeriod {
-  id          String
-  startDate   String
-  endDate     String
 }
 
 type OutletSunlightHour {
