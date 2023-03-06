@@ -15,119 +15,41 @@ datasource db {
 // https://www.prisma.io/docs/concepts/components/prisma-client/composite-types
 
 model Outlet {
-  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
-  name                  String      @unique
-  street                String
-  houseNumber           String
-  city                  String
-  zipCode               String
-  category              String
-  latitude              String      @unique
-  longitude             String      @unique
-  openingHours          OpeningHour[]
-  sunlightHours         SunlightHour[]
-  outletSunlightHours   OutletSunlightHour[]
-  published             Boolean?    @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  street        String
+  houseNumber   String
+  city          String
+  zipCode       String
+  category      String
+  latitude      String
+  longitude     String
+  openingHours  OpeningHour[]
+  sunlightHours SunlightHour[]
 }
 
-model OpeningHour {
-  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
-  outlet                Outlet      @relation(fields: [outletId], references: [id]) // many-to-1
-  outletId              String      @db.ObjectId
-  weekDay               String
-  openAt                String?
-  closesAt              String?
-  closed                Boolean?
-  published             Boolean?    @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-  @@unique([outletId, weekDay], name: "outletIdWeekday")
+type OpeningHour {
+  id            String
+  weekday       String
+  openAt        String
+  closesAt      String
 }
 
-model OutletSunlightHour {
-  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
-  outlet                Outlet      @relation(fields: [outletId], references: [id]) // many-to-1
-  outletId              String      @db.ObjectId
-  yearPeriod            YearPeriod  @relation(fields: [yearPeriodId], references: [id]) // many-to-1
-  yearPeriodId          String      @db.ObjectId
-  sunlightHours         SunlightHour[]
-  published             Boolean?    @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-  @@unique([yearPeriodId, outletId], name: "yearPeriodOutletId")
+type SunlightHour {
+  id            String
+  yearPeriod    YearPeriod
+  outletSunlightHours OutletSunlightHour[]
 }
 
-model YearPeriod {
-  id                    String       @id @default(auto()) @map("_id") @db.ObjectId
-  startDate             DateTime     @unique
-  endDate               DateTime
-  outletSunlightHours   OutletSunlightHour[] // 1-to-many
-  published             Boolean?    @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+type YearPeriod {
+  id          String
+  startDate   String
+  endDate     String
 }
 
-model SunlightHour {
-  id                    String      @id @default(auto()) @map("_id") @db.ObjectId
-  outletSunlightHour    OutletSunlightHour @relation(fields: [outletSunlightHourId], references: [id]) // many-to-1
-  outletSunlightHourId  String      @db.ObjectId
-  startTime             String
-  endTime               String
-  outlet                Outlet?     @relation(fields: [outletId], references: [id])
-  outletId              String?     @db.ObjectId
-  published             Boolean?    @default(true)
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
-  @@unique([outletSunlightHourId, startTime], name: "outletSunlightHourIdStartTime")
+type OutletSunlightHour {
+  id          String
+  startTime   String
+  endTime     String
+  sunShine    Int
 }
-
-
-
-
-// Optional models for next/auth
-//
-// model Account {
-//     id                String  @id @default(cuid())
-//     userId            String
-//     type              String
-//     provider          String
-//     providerAccountId String
-//     refresh_token     String? // @db.Text
-//     access_token      String? // @db.Text
-//     expires_at        Int?
-//     token_type        String?
-//     scope             String?
-//     id_token          String? // @db.Text
-//     session_state     String?
-//     user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-//     @@unique([provider, providerAccountId])
-// }
-
-// model Session {
-//     id           String   @id @default(cuid())
-//     sessionToken String   @unique
-//     userId       String
-//     expires      DateTime
-//     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-// }
-
-// model User {
-//     id            String    @id @default(cuid())
-//     name          String?
-//     email         String?   @unique
-//     emailVerified DateTime?
-//     image         String?
-//     accounts      Account[]
-//     sessions      Session[]
-// }
-
-// model VerificationToken {
-//     identifier String
-//     token      String   @unique
-//     expires    DateTime
-
-//     @@unique([identifier, token])
-// }
