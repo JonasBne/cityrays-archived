@@ -6,6 +6,7 @@ import { readdir } from "node:fs/promises";
 import { filesDirectoryPath } from "@/config/paths";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { start } from "node:repl";
 
 enum EAddress {
   name = "B56",
@@ -28,27 +29,93 @@ enum EWeekdays {
   SUNDAY = "B76",
 }
 
+const startRow = 2;
+const endRow = 54;
+const dataColumns = [
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "H",
+  "I",
+  "J",
+  "K",
+  "L",
+  "M",
+  "N",
+  "O",
+  "P",
+  "Q",
+  "R",
+  "S",
+  "T",
+  "U",
+  "V",
+  "W",
+  "X",
+  "Y",
+  "Z",
+  "AA",
+  "AB",
+  "AC",
+  "AD",
+  "AE",
+  "AF",
+  "AG",
+  "AH",
+  "AI",
+  "AJ",
+  "AK",
+  "AL",
+  "AM",
+  "AN",
+  "AO",
+  "AP",
+  "AQ",
+  "AR",
+  "AS",
+  "AT",
+  "AU",
+  "AV",
+  "AW",
+  "AX",
+  "AY",
+  "AZ",
+  "BA",
+  "BB",
+  "BC",
+  "BD",
+  "BE",
+  "BF",
+  "BG",
+  "BH",
+  "BI",
+  "BJ",
+  "BK",
+  "BL",
+];
+
+const yearPeriodColumns = ["A", "B"];
+
 const prisma = new PrismaClient();
 
-function parseFile(filePath: string) {
-  const workbook = xlsx.readFile(filePath);
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+const createOutletPayload = {} as Prisma.OutletCreateInput;
 
-  const createOutletPayload = {} as Prisma.OutletCreateInput;
-
+function createGeneralInformationPayload(sheet: any) {
   // general information
   Object.entries(EAddress).forEach((keyPair) => {
     const label = keyPair[0] as EAddress;
     const cell: string = keyPair[1];
-    const value: string | number = sheet[cell].v;
+    const value: string | number = sheet[cell]?.v;
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     createOutletPayload[label] = value;
   });
+}
 
+function createOpeningHoursPayload(sheet: any) {
   // opening hours
   const openingHours = [] as Prisma.OpeningHourCreateInput[];
 
@@ -75,8 +142,44 @@ function parseFile(filePath: string) {
     // @ts-ignore
     openingHours.push(openingHour);
   });
-
   createOutletPayload["openingHours"] = openingHours;
+}
+
+function createSunlightHoursPayload(sheet: any) {
+  const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
+
+  const yearPeriodStartCol = yearPeriodColumns[0] as string;
+  const yearPeriodEndCol = yearPeriodColumns[1] as string;
+
+  for (let i = startRow; i < endRow; i++) {
+    const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
+    const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
+
+    const startDate = sheet[startDateRowCol]?.w;
+    const endDate = sheet[endDateRowCol]?.w;
+
+    const sunlightHourPayload = {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      id: uuidv4(),
+      startDate,
+      endDate,
+      outletSunlightHours: [],
+    };
+
+    sunlightHours.push(sunlightHourPayload);
+  }
+  createOutletPayload["sunlightHours"] = sunlightHours;
+}
+
+function parseFile(filePath: string) {
+  const workbook = xlsx.readFile(filePath);
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+  createGeneralInformationPayload(sheet);
+  createOpeningHoursPayload(sheet);
+  createSunlightHoursPayload(sheet);
 }
 
 void (async () => {
@@ -86,6 +189,7 @@ void (async () => {
     for (const file of files) {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
+      console.log(createOutletPayload);
     }
   } catch (err) {
     console.error("error during parsing", err);
