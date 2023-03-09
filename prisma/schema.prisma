@@ -31,8 +31,8 @@ model Outlet {
 type OpeningHour {
   id            String
   weekday       String
-  openAt        String
-  closesAt      String
+  openAt        String?
+  closesAt      String?
 }
 
 type SunlightHour {

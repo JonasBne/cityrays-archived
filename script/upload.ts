@@ -4,8 +4,8 @@ import * as xlsx from "xlsx";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { filesDirectoryPath } from "@/config/paths";
-import { type Outlet, PrismaClient } from "@prisma/client";
-import { create } from "node:domain";
+import { type Prisma, PrismaClient } from "@prisma/client";
+import { v4 as uuidv4 } from "uuid";
 
 enum EAddress {
   name = "B56",
@@ -18,6 +18,16 @@ enum EAddress {
   longitude = "B63",
 }
 
+enum EWeekdays {
+  MONDAY = "B70",
+  TUESDAY = "B71",
+  WEDNESDAY = "B72",
+  THURSDAY = "B73",
+  FRIDAY = "B74",
+  SATURDAY = "B75",
+  SUNDAY = "B76",
+}
+
 const prisma = new PrismaClient();
 
 function parseFile(filePath: string) {
@@ -26,24 +36,47 @@ function parseFile(filePath: string) {
   // @ts-ignore
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  const createOutletPayload = {} as Outlet;
+  const createOutletPayload = {} as Prisma.OutletCreateInput;
 
   // general information
   Object.entries(EAddress).forEach((keyPair) => {
-    console.log(keyPair);
-    // label (name, city,...)
-    const key = keyPair[0] as EAddress;
-    // corresponding cell
-    const cell = keyPair[1];
-
-    const value = sheet[cell].v;
+    const label = keyPair[0] as EAddress;
+    const cell: string = keyPair[1];
+    const value: string | number = sheet[cell].v;
 
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    createOutletPayload[key] = value;
+    createOutletPayload[label] = value;
   });
 
-  console.log(createOutletPayload);
+  // opening hours
+  const openingHours = [] as Prisma.OpeningHourCreateInput[];
+
+  Object.entries(EWeekdays).forEach((keyPair) => {
+    const weekday = keyPair[0] as EWeekdays;
+    const cell: string = keyPair[1];
+    const value: string | null = sheet[cell]?.v || null;
+
+    // split on the '-' character to separate open and closing time if available
+    const values = value ? value.split("-") : null;
+
+    const openAt = values && values.length > 0 ? values[0] : null;
+    const closesAt = values && values.length > 0 ? values[1] : null;
+
+    const openingHour = {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      id: uuidv4(),
+      weekday,
+      openAt,
+      closesAt,
+    };
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    openingHours.push(openingHour);
+  });
+
+  createOutletPayload["openingHours"] = openingHours;
 }
 
 void (async () => {
