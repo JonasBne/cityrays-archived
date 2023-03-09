@@ -18,12 +18,12 @@ model Outlet {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   street        String
-  houseNumber   String
+  houseNumber   Int
   city          String
-  zipCode       String
+  zipCode       Int
   category      String
-  latitude      String
-  longitude     String
+  latitude      Int
+  longitude     Int
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
 }
