@@ -79,7 +79,7 @@ const outletOpeningHoursProperties: TOutletWeekdaysProperties = {
 
 const startRow = 2;
 const endRow = 54;
-const dataColumns = [
+const sunlightHoursDataColumns = [
   "C",
   "D",
   "E",
@@ -195,19 +195,58 @@ function createOutletSunlightHoursPayload(sheet: any) {
   const yearPeriodStartCol = yearPeriodColumns[0] as string;
   const yearPeriodEndCol = yearPeriodColumns[1] as string;
 
+  // store timestamps temporarily before modifying to correct form
+  const sunlightHourTimestamps: Array<string> = [];
+
+  sunlightHoursDataColumns.forEach((column) => {
+    const timestamp = sheet[`${column}1`]?.w as string | undefined;
+
+    if (timestamp) {
+      sunlightHourTimestamps.push(timestamp);
+    }
+  });
+
+  const sunLightHoursTimestampPairs = sunlightHourTimestamps
+    .map((timestamp, index) => {
+      if (index % 2 === 0) {
+        const endTime = sunlightHourTimestamps[index + 1];
+        return {
+          startTime: timestamp,
+          endTime: endTime,
+        };
+      }
+    })
+    .filter((result) => typeof result !== undefined);
+
+  const outletSunlightHours: Array<any> = [];
+
   for (let i = startRow; i < endRow; i++) {
+    // add all the year periods
     const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
     const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
 
     const startDate = sheet[startDateRowCol]?.w;
     const endDate = sheet[endDateRowCol]?.w;
 
+    // add timestamp pairs for each row
+    outletSunlightHours.push(sunLightHoursTimestampPairs);
+
+    // sunlightHoursDataColumns.forEach((column, index) => {
+    //   const sunlightHourRowColFirst = `${column}${i.toString()}`;
+    //   const sunlightHourRowColSecond = `${column}${(i + index).toString()}`;
+    //   console.log(
+    //     "pairs",
+    //     sheet[sunlightHourRowColFirst],
+    //     sheet[sunlightHourRowColSecond]
+    //   );
+    // });
+
     const sunlightHourPayload = {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       id: uuidv4(),
       startDate,
       endDate,
-      outletSunlightHours: [],
+      outletSunlightHours,
     };
 
     sunlightHours.push(sunlightHourPayload);
