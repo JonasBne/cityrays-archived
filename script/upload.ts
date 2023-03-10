@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as xlsx from "xlsx";
@@ -6,9 +7,18 @@ import { readdir } from "node:fs/promises";
 import { filesDirectoryPath } from "@/config/paths";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { start } from "node:repl";
 
-enum EAddress {
+type TAddressLabel =
+  | "name"
+  | "city"
+  | "street"
+  | "houseNumber"
+  | "zipCode"
+  | "category"
+  | "latitude"
+  | "longitude";
+
+enum EAddressSheetCells {
   name = "B56",
   city = "B57",
   street = "B58",
@@ -19,7 +29,31 @@ enum EAddress {
   longitude = "B63",
 }
 
-enum EWeekdays {
+type TOutletAddressProperties = {
+  [key in TAddressLabel]: EAddressSheetCells;
+};
+
+const outletAddressProperties: TOutletAddressProperties = {
+  name: EAddressSheetCells.name,
+  city: EAddressSheetCells.city,
+  street: EAddressSheetCells.street,
+  houseNumber: EAddressSheetCells.houseNumber,
+  zipCode: EAddressSheetCells.zipCode,
+  category: EAddressSheetCells.category,
+  latitude: EAddressSheetCells.longitude,
+  longitude: EAddressSheetCells.name,
+};
+
+type TWeekdaysLabel =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+enum EWeekdaysSheetCells {
   MONDAY = "B70",
   TUESDAY = "B71",
   WEDNESDAY = "B72",
@@ -28,6 +62,20 @@ enum EWeekdays {
   SATURDAY = "B75",
   SUNDAY = "B76",
 }
+
+type TOutletWeekdaysProperties = {
+  [key in TWeekdaysLabel]: EWeekdaysSheetCells;
+};
+
+const outletOpeningHoursProperties: TOutletWeekdaysProperties = {
+  monday: EWeekdaysSheetCells.MONDAY,
+  tuesday: EWeekdaysSheetCells.TUESDAY,
+  wednesday: EWeekdaysSheetCells.WEDNESDAY,
+  thursday: EWeekdaysSheetCells.THURSDAY,
+  friday: EWeekdaysSheetCells.FRIDAY,
+  saturday: EWeekdaysSheetCells.SATURDAY,
+  sunday: EWeekdaysSheetCells.SUNDAY,
+};
 
 const startRow = 2;
 const endRow = 54;
@@ -102,25 +150,22 @@ const prisma = new PrismaClient();
 
 const createOutletPayload = {} as Prisma.OutletCreateInput;
 
-function createGeneralInformationPayload(sheet: any) {
-  // general information
-  Object.entries(EAddress).forEach((keyPair) => {
-    const label = keyPair[0] as EAddress;
+function createOutletAddressInformationPayload(sheet: any) {
+  Object.entries(outletAddressProperties).forEach((keyPair) => {
+    const label = keyPair[0] as TAddressLabel;
     const cell: string = keyPair[1];
     const value: string | number = sheet[cell]?.v;
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     createOutletPayload[label] = value;
   });
 }
 
-function createOpeningHoursPayload(sheet: any) {
-  // opening hours
+function createOutletOpeningHoursPayload(sheet: any) {
   const openingHours = [] as Prisma.OpeningHourCreateInput[];
 
-  Object.entries(EWeekdays).forEach((keyPair) => {
-    const weekday = keyPair[0] as EWeekdays;
+  Object.entries(outletOpeningHoursProperties).forEach((keyPair) => {
+    const weekday = keyPair[0] as TWeekdaysLabel;
     const cell: string = keyPair[1];
     const value: string | null = sheet[cell]?.v || null;
 
@@ -138,14 +183,13 @@ function createOpeningHoursPayload(sheet: any) {
       closesAt,
     };
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     openingHours.push(openingHour);
   });
   createOutletPayload["openingHours"] = openingHours;
 }
 
-function createSunlightHoursPayload(sheet: any) {
+function createOutletSunlightHoursPayload(sheet: any) {
   const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
 
   const yearPeriodStartCol = yearPeriodColumns[0] as string;
@@ -177,9 +221,9 @@ function parseFile(filePath: string) {
   // @ts-ignore
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  createGeneralInformationPayload(sheet);
-  createOpeningHoursPayload(sheet);
-  createSunlightHoursPayload(sheet);
+  createOutletAddressInformationPayload(sheet);
+  createOutletOpeningHoursPayload(sheet);
+  createOutletSunlightHoursPayload(sheet);
 }
 
 void (async () => {
