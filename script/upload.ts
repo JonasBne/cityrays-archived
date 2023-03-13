@@ -148,7 +148,15 @@ const yearPeriodColumns = ["A", "B"];
 
 const prisma = new PrismaClient();
 
+// final payloads
 const createOutletPayload = {} as Prisma.OutletCreateInput;
+const openingHours = [] as Prisma.OpeningHourCreateInput[];
+const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
+
+// temporary payloads
+// store timestamps temporarily before modifying to correct form
+const sunlightHourTimestamps: Array<string> = [];
+const outletSunlightHours: Array<any> = [];
 
 function createOutletAddressInformationPayload(sheet: any) {
   Object.entries(outletAddressProperties).forEach((keyPair) => {
@@ -162,8 +170,6 @@ function createOutletAddressInformationPayload(sheet: any) {
 }
 
 function createOutletOpeningHoursPayload(sheet: any) {
-  const openingHours = [] as Prisma.OpeningHourCreateInput[];
-
   Object.entries(outletOpeningHoursProperties).forEach((keyPair) => {
     const weekday = keyPair[0] as TWeekdaysLabel;
     const cell: string = keyPair[1];
@@ -190,13 +196,8 @@ function createOutletOpeningHoursPayload(sheet: any) {
 }
 
 function createOutletSunlightHoursPayload(sheet: any) {
-  const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
-
   const yearPeriodStartCol = yearPeriodColumns[0] as string;
   const yearPeriodEndCol = yearPeriodColumns[1] as string;
-
-  // store timestamps temporarily before modifying to correct form
-  const sunlightHourTimestamps: Array<string> = [];
 
   sunlightHoursDataColumns.forEach((column) => {
     const timestamp = sheet[`${column}1`]?.w as string | undefined;
@@ -206,7 +207,7 @@ function createOutletSunlightHoursPayload(sheet: any) {
     }
   });
 
-  console.log(sunlightHourTimestamps);
+  // console.log(sunlightHourTimestamps);
 
   const sunLightHoursTimestampPairs = sunlightHourTimestamps
     .map((timestamp, index) => {
@@ -219,8 +220,6 @@ function createOutletSunlightHoursPayload(sheet: any) {
       }
     })
     .filter((result) => typeof result !== undefined);
-
-  const outletSunlightHours: Array<any> = [];
 
   for (let i = startRow; i < endRow; i++) {
     // add all the year periods
