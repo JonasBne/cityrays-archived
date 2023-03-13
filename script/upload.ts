@@ -154,8 +154,6 @@ const openingHours = [] as Prisma.OpeningHourCreateInput[];
 const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
 
 // temporary payloads
-// store timestamps temporarily before modifying to correct form
-const sunlightHourTimestamps: Array<string> = [];
 const outletSunlightHours: Array<any> = [];
 
 function createOutletAddressInformationPayload(sheet: any) {
@@ -199,27 +197,39 @@ function createOutletSunlightHoursPayload(sheet: any) {
   const yearPeriodStartCol = yearPeriodColumns[0] as string;
   const yearPeriodEndCol = yearPeriodColumns[1] as string;
 
-  sunlightHoursDataColumns.forEach((column) => {
-    const timestamp = sheet[`${column}1`]?.w as string | undefined;
+  const sunlightHourTimestamps = sunlightHoursDataColumns
+    .map((column) => {
+      const timestamp = sheet[`${column}1`]?.w as string | undefined;
 
-    if (timestamp) {
-      sunlightHourTimestamps.push(timestamp);
-    }
-  });
+      if (timestamp) {
+        return timestamp;
+      }
+    })
+    .filter(
+      (timestamp): timestamp is Required<string> =>
+        typeof timestamp !== undefined
+    );
 
   // console.log(sunlightHourTimestamps);
 
   const sunLightHoursTimestampPairs = sunlightHourTimestamps
     .map((timestamp, index) => {
       if (index % 2 === 0) {
-        const endTime = sunlightHourTimestamps[index + 1];
+        const endTime = sunlightHourTimestamps[index + 1] ?? null;
         return {
           startTime: timestamp,
           endTime: endTime,
         };
       }
     })
-    .filter((result) => typeof result !== undefined);
+    .filter(
+      (
+        timestamp
+      ): timestamp is Required<{
+        startTime: string;
+        endTime: string | null;
+      }> => typeof timestamp !== undefined
+    );
 
   for (let i = startRow; i < endRow; i++) {
     // add all the year periods
@@ -273,7 +283,8 @@ void (async () => {
     for (const file of files) {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
-      console.log(createOutletPayload);
+      // TODO: fix issue with loop in timestamps
+      console.log(createOutletPayload.sunlightHours[0].outletSunlightHours);
     }
   } catch (err) {
     console.error("error during parsing", err);
