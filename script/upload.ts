@@ -157,6 +157,7 @@ const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
 const outletSunlightHours: Array<any> = [];
 
 function createOutletAddressInformationPayload(sheet: any) {
+  console.log("CALLED");
   Object.entries(outletAddressProperties).forEach((keyPair) => {
     const label = keyPair[0] as TAddressLabel;
     const cell: string = keyPair[1];
@@ -227,19 +228,21 @@ function createOutletSunlightHoursPayload(sheet: any) {
     const startDate = sheet[startDateRowCol]?.w;
     const endDate = sheet[endDateRowCol]?.w;
 
-    // add timestamp pairs for each row
-    outletSunlightHours.push(sunLightHoursTimestampPairs);
+    sunlightHoursDataColumns.forEach((column, index) => {
+      const timestampPair = sunLightHoursTimestampPairs[index];
+      const sunShine = sheet[`${column}${i.toString()}`]?.v;
 
-    // sunlightHoursDataColumns.forEach((column, index) => {
-    //   const sunlightHourRowColFirst = `${column}${i.toString()}`;
-    //   const sunlightHourRowColSecond = `${column}${(i + index).toString()}`;
-    //   console.log(
-    //     "pairs",
-    //     sheet[sunlightHourRowColFirst],
-    //     sheet[sunlightHourRowColSecond]
-    //   );
-    // });
+      if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
+        outletSunlightHours.push({
+          id: uuidv4(),
+          startTime: timestampPair?.startTime,
+          endTime: timestampPair?.endTime,
+          sunShine,
+        });
+      }
+    });
 
+    // TODO: type
     const sunlightHourPayload = {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       id: uuidv4(),
@@ -259,14 +262,20 @@ function parseFile(filePath: string) {
   // @ts-ignore
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
+  console.time("files");
   createOutletAddressInformationPayload(sheet);
   createOutletOpeningHoursPayload(sheet);
   createOutletSunlightHoursPayload(sheet);
+  console.timeEnd("files");
 }
 
 void (async () => {
   try {
-    const files = await readdir(path.join(process.cwd(), filesDirectoryPath));
+    const fileNames = await readdir(
+      path.join(process.cwd(), filesDirectoryPath)
+    );
+    const files = fileNames.filter((fileName) => fileName.includes(".xlsx"));
+    console.log(files);
 
     for (const file of files) {
       const filePath = path.join(filesDirectoryPath, file);
