@@ -210,26 +210,14 @@ function createOutletSunlightHoursPayload(sheet: any) {
         typeof timestamp !== undefined
     );
 
-  // console.log(sunlightHourTimestamps);
-
   const sunLightHoursTimestampPairs = sunlightHourTimestamps
     .map((timestamp, index) => {
-      if (index % 2 === 0) {
-        const endTime = sunlightHourTimestamps[index + 1] ?? null;
-        return {
-          startTime: timestamp,
-          endTime: endTime,
-        };
-      }
+      return {
+        startTime: timestamp,
+        endTime: sunlightHourTimestamps[index + 1] ?? null,
+      };
     })
-    .filter(
-      (
-        timestamp
-      ): timestamp is Required<{
-        startTime: string;
-        endTime: string | null;
-      }> => typeof timestamp !== undefined
-    );
+    .filter((timestamp) => timestamp.endTime);
 
   for (let i = startRow; i < endRow; i++) {
     // add all the year periods
@@ -283,8 +271,6 @@ void (async () => {
     for (const file of files) {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
-      // TODO: fix issue with loop in timestamps
-      console.log(createOutletPayload.sunlightHours[0].outletSunlightHours);
     }
   } catch (err) {
     console.error("error during parsing", err);
