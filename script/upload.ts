@@ -40,8 +40,8 @@ const outletAddressProperties: TOutletAddressProperties = {
   houseNumber: EAddressSheetCells.houseNumber,
   zipCode: EAddressSheetCells.zipCode,
   category: EAddressSheetCells.category,
-  latitude: EAddressSheetCells.longitude,
-  longitude: EAddressSheetCells.name,
+  latitude: EAddressSheetCells.latitude,
+  longitude: EAddressSheetCells.longitude,
 };
 
 type TWeekdaysLabel =
@@ -205,6 +205,8 @@ function createOutletSunlightHoursPayload(sheet: any) {
       sunlightHourTimestamps.push(timestamp);
     }
   });
+
+  console.log(sunlightHourTimestamps);
 
   const sunLightHoursTimestampPairs = sunlightHourTimestamps
     .map((timestamp, index) => {
