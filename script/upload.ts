@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as xlsx from "xlsx";
 import path from "node:path";
 import { readdir } from "node:fs/promises";
 import { filesDirectoryPath } from "@/config/paths";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { unknown } from "zod";
 
 type TAddressLabel =
   | "name"
@@ -67,6 +63,14 @@ enum EWeekdaysSheetCells {
 type TOutletWeekdaysProperties = {
   [key in TWeekdaysLabel]: EWeekdaysSheetCells;
 };
+
+interface ISheetCell {
+  t: unknown;
+  v: unknown;
+  r: unknown;
+  h: unknown;
+  w: unknown;
+}
 
 const outletOpeningHoursProperties: TOutletWeekdaysProperties = {
   monday: EWeekdaysSheetCells.MONDAY,
@@ -150,110 +154,122 @@ const yearPeriodColumns = ["A", "B"];
 const prisma = new PrismaClient();
 
 // final payloads
-const createOutletPayload = {} as Prisma.OutletCreateInput;
-const openingHours = [] as Prisma.OpeningHourCreateInput[];
-const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
+const createOutletInput = {} as Prisma.OutletCreateInput;
+const createOpeningHoursInput = [] as Prisma.OpeningHourCreateInput[];
+const createSunlightHoursInput = [] as Prisma.SunlightHourCreateInput[];
 
 // temporary payloads
 const outletSunlightHours: Array<any> = [];
 
-function createOutletAddressInformationPayload(sheet: xlsx.WorkSheet) {
+function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   Object.entries(outletAddressProperties).forEach(([key, value]) => {
     const label = key as TAddressLabel;
     const cell = value;
-    const cellValue: string | number = sheet[cell]?.v;
+    const cellValue = (sheet[cell] as ISheetCell)?.v as string | number;
 
-    Object.assign(createOutletPayload, { [label]: cellValue });
+    Object.assign(createOutletInput, { [label]: cellValue });
   });
 }
 
-function createOutletOpeningHoursPayload(sheet: xlsx.WorkSheet) {
-  Object.entries(outletOpeningHoursProperties).forEach((keyPair) => {
-    const weekday = keyPair[0] as TWeekdaysLabel;
-    const cell: string = keyPair[1];
-    const value: string | null = sheet[cell]?.v || null;
+function createOutletOpeningHoursInput(sheet: xlsx.WorkSheet) {
+  Object.entries(outletOpeningHoursProperties).forEach(([key, value]) => {
+    const weekday = key as TWeekdaysLabel;
+    const cell = value;
+    const cellValue = ((sheet[cell] as ISheetCell)?.v || null) as string | null;
 
     // split on the '-' character to separate open and closing time if available
-    const values = value ? value.split("-") : null;
+    // so 10:00-12:00 becomes ['10:00', '12:00'] or ['10:00', null]
+    const openingHours = cellValue ? cellValue.split("-") : null;
 
-    const openAt = values && values.length > 0 ? values[0] : null;
-    const closesAt = values && values.length > 0 ? values[1] : null;
+    const openAt =
+      openingHours && openingHours.length > 0 && openingHours[0]
+        ? openingHours[0]
+        : null;
+    const closesAt =
+      openingHours && openingHours.length > 0 && openingHours[1]
+        ? openingHours[1]
+        : null;
 
     const openingHour = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       id: uuidv4(),
       weekday,
       openAt,
       closesAt,
     };
 
+    // @Peter: if you remove this ts-ignore then ts will warn that type openAt of string | null
+    // is not assignable to type string, but my schema says that openAt and closesAt are optional
+    // so I'm not sure why this does not work
+
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
-    openingHours.push(openingHour);
+    createOpeningHoursInput.push(openingHour);
   });
-  createOutletPayload["openingHours"] = openingHours;
+
+  Object.assign(createOutletInput, { openingHours: createOpeningHoursInput });
 }
 
-function createOutletSunlightHoursPayload(sheet: xlsx.WorkSheet) {
-  const yearPeriodStartCol = yearPeriodColumns[0] as string;
-  const yearPeriodEndCol = yearPeriodColumns[1] as string;
+// function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
+//   const yearPeriodStartCol = yearPeriodColumns[0] as string;
+//   const yearPeriodEndCol = yearPeriodColumns[1] as string;
 
-  const sunlightHourTimestamps = sunlightHoursDataColumns
-    .map((column) => {
-      const timestamp = sheet[`${column}1`]?.w as string | undefined;
+//   const sunlightHourTimestamps = sunlightHoursDataColumns
+//     .map((column) => {
+//       const timestamp = sheet[`${column}1`]?.w as string | undefined;
 
-      if (timestamp) {
-        return timestamp;
-      }
-    })
-    .filter(
-      (timestamp): timestamp is Required<string> =>
-        typeof timestamp !== undefined
-    );
+//       if (timestamp) {
+//         return timestamp;
+//       }
+//     })
+//     .filter(
+//       (timestamp): timestamp is Required<string> =>
+//         typeof timestamp !== undefined
+//     );
 
-  const sunLightHoursTimestampPairs = sunlightHourTimestamps
-    .map((timestamp, index) => {
-      return {
-        startTime: timestamp,
-        endTime: sunlightHourTimestamps[index + 1] ?? null,
-      };
-    })
-    .filter((timestamp) => timestamp.endTime);
+//   const sunLightHoursTimestampPairs = sunlightHourTimestamps
+//     .map((timestamp, index) => {
+//       return {
+//         startTime: timestamp,
+//         endTime: sunlightHourTimestamps[index + 1] ?? null,
+//       };
+//     })
+//     .filter((timestamp) => timestamp.endTime);
 
-  for (let i = startRow; i < endRow; i++) {
-    // add all the year periods
-    const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
-    const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
+//   for (let i = startRow; i < endRow; i++) {
+//     // add all the year periods
+//     const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
+//     const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
 
-    const startDate = sheet[startDateRowCol]?.w;
-    const endDate = sheet[endDateRowCol]?.w;
+//     const startDate = sheet[startDateRowCol]?.w;
+//     const endDate = sheet[endDateRowCol]?.w;
 
-    sunlightHoursDataColumns.forEach((column, index) => {
-      const timestampPair = sunLightHoursTimestampPairs[index];
-      const sunShine = sheet[`${column}${i.toString()}`]?.v;
+//     sunlightHoursDataColumns.forEach((column, index) => {
+//       const timestampPair = sunLightHoursTimestampPairs[index];
+//       const sunShine = sheet[`${column}${i.toString()}`]?.v;
 
-      if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
-        outletSunlightHours.push({
-          id: uuidv4(),
-          startTime: timestampPair?.startTime,
-          endTime: timestampPair?.endTime,
-          sunShine,
-        });
-      }
-    });
+//       if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
+//         outletSunlightHours.push({
+//           id: uuidv4(),
+//           startTime: timestampPair?.startTime,
+//           endTime: timestampPair?.endTime,
+//           sunShine,
+//         });
+//       }
+//     });
 
-    // TODO: type
-    const sunlightHourPayload = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      id: uuidv4(),
-      startDate,
-      endDate,
-      outletSunlightHours,
-    };
+//     // TODO: type
+//     const sunlightHourPayload = {
+//       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+//       id: uuidv4(),
+//       startDate,
+//       endDate,
+//       outletSunlightHours,
+//     };
 
-    sunlightHours.push(sunlightHourPayload);
-  }
-  createOutletPayload["sunlightHours"] = sunlightHours;
-}
+//     createSunlightHoursInput.push(sunlightHourPayload);
+//   }
+//   createOutletInput["sunlightHours"] = createSunlightHoursInput;
+// }
 
 function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
@@ -263,8 +279,8 @@ function parseFile(filePath: string) {
 
   if (sheet) {
     try {
-      createOutletAddressInformationPayload(sheet);
-      // createOutletOpeningHoursPayload(sheet);
+      createOutletAddressInformationInput(sheet);
+      createOutletOpeningHoursInput(sheet);
       // createOutletSunlightHoursPayload(sheet);
     } catch (err) {
       throw new Error();
@@ -289,7 +305,7 @@ void (async () => {
       parseFile(filePath);
     }
 
-    console.log(createOutletPayload);
+    console.log(createOutletInput);
     console.log("√: Upload successful");
   } catch (err) {
     console.error("x: Upload failed. Error:", err);
