@@ -166,9 +166,14 @@ function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   Object.entries(outletAddressProperties).forEach(([key, value]) => {
     const label = key as TAddressLabel;
     const cell = value;
-    const cellValue = (sheet[cell] as ISheetCell)?.v as string | number;
+    const cellValue = (sheet[cell] as ISheetCell)?.v as
+      | string
+      | number
+      | undefined;
 
-    Object.assign(createOutletInput, { [label]: cellValue });
+    if (cellValue) {
+      Object.assign(createOutletInput, { [label]: cellValue });
+    }
   });
 }
 
