@@ -262,20 +262,20 @@ function parseFile(filePath: string) {
   // @ts-ignore
   const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  console.time("files");
   createOutletAddressInformationPayload(sheet);
   createOutletOpeningHoursPayload(sheet);
   createOutletSunlightHoursPayload(sheet);
-  console.timeEnd("files");
 }
 
+// TODO: add error handling?
+
+// TODO: add glob
 void (async () => {
   try {
     const fileNames = await readdir(
       path.join(process.cwd(), filesDirectoryPath)
     );
     const files = fileNames.filter((fileName) => fileName.includes(".xlsx"));
-    console.log(files);
 
     for (const file of files) {
       const filePath = path.join(filesDirectoryPath, file);
