@@ -7,6 +7,7 @@ import { readdir } from "node:fs/promises";
 import { filesDirectoryPath } from "@/config/paths";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { unknown } from "zod";
 
 type TAddressLabel =
   | "name"
@@ -156,19 +157,17 @@ const sunlightHours = [] as Prisma.SunlightHourCreateInput[];
 // temporary payloads
 const outletSunlightHours: Array<any> = [];
 
-function createOutletAddressInformationPayload(sheet: any) {
-  console.log("CALLED");
-  Object.entries(outletAddressProperties).forEach((keyPair) => {
-    const label = keyPair[0] as TAddressLabel;
-    const cell: string = keyPair[1];
-    const value: string | number = sheet[cell]?.v;
+function createOutletAddressInformationPayload(sheet: xlsx.WorkSheet) {
+  Object.entries(outletAddressProperties).forEach(([key, value]) => {
+    const label = key as TAddressLabel;
+    const cell = value;
+    const cellValue: string | number = sheet[cell]?.v;
 
-    // @ts-ignore
-    createOutletPayload[label] = value;
+    Object.assign(createOutletPayload, { [label]: cellValue });
   });
 }
 
-function createOutletOpeningHoursPayload(sheet: any) {
+function createOutletOpeningHoursPayload(sheet: xlsx.WorkSheet) {
   Object.entries(outletOpeningHoursProperties).forEach((keyPair) => {
     const weekday = keyPair[0] as TWeekdaysLabel;
     const cell: string = keyPair[1];
@@ -194,7 +193,7 @@ function createOutletOpeningHoursPayload(sheet: any) {
   createOutletPayload["openingHours"] = openingHours;
 }
 
-function createOutletSunlightHoursPayload(sheet: any) {
+function createOutletSunlightHoursPayload(sheet: xlsx.WorkSheet) {
   const yearPeriodStartCol = yearPeriodColumns[0] as string;
   const yearPeriodEndCol = yearPeriodColumns[1] as string;
 
@@ -258,13 +257,21 @@ function createOutletSunlightHoursPayload(sheet: any) {
 
 function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
 
-  createOutletAddressInformationPayload(sheet);
-  createOutletOpeningHoursPayload(sheet);
-  createOutletSunlightHoursPayload(sheet);
+  const sheetName = workbook.SheetNames[0];
+  const sheet = sheetName ? workbook.Sheets[sheetName] : undefined;
+
+  if (sheet) {
+    try {
+      createOutletAddressInformationPayload(sheet);
+      // createOutletOpeningHoursPayload(sheet);
+      // createOutletSunlightHoursPayload(sheet);
+    } catch (err) {
+      throw new Error();
+    }
+  } else {
+    console.error("x: No valid sheet found");
+  }
 }
 
 // TODO: add error handling?
@@ -281,7 +288,10 @@ void (async () => {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
     }
+
+    console.log(createOutletPayload);
+    console.log("√: Upload successful");
   } catch (err) {
-    console.error("error during parsing", err);
+    console.error("x: Upload failed. Error:", err);
   }
 })();
