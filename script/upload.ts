@@ -149,7 +149,8 @@ const sunlightHoursDataColumns = [
   "BL",
 ];
 
-const yearPeriodColumns = ["A", "B"];
+const yearPeriodStartCol = "A";
+const yearPeriodEndCol = "B";
 
 const prisma = new PrismaClient();
 
@@ -209,67 +210,73 @@ function createOutletOpeningHoursInput(sheet: xlsx.WorkSheet) {
   Object.assign(createOutletInput, { openingHours: createOpeningHoursInput });
 }
 
-// function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
-//   const yearPeriodStartCol = yearPeriodColumns[0] as string;
-//   const yearPeriodEndCol = yearPeriodColumns[1] as string;
+function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
+  const timestamps = sunlightHoursDataColumns
+    .map((column) => {
+      const timestamp = (sheet[`${column}1`] as ISheetCell)?.w as
+        | string
+        | undefined;
 
-//   const sunlightHourTimestamps = sunlightHoursDataColumns
-//     .map((column) => {
-//       const timestamp = sheet[`${column}1`]?.w as string | undefined;
+      if (timestamp) {
+        return timestamp;
+      }
+    })
+    .filter(
+      (timestamp): timestamp is Required<string> =>
+        typeof timestamp !== undefined
+    );
 
-//       if (timestamp) {
-//         return timestamp;
-//       }
-//     })
-//     .filter(
-//       (timestamp): timestamp is Required<string> =>
-//         typeof timestamp !== undefined
-//     );
+  const timestampPairs = timestamps
+    .map((timestamp, index) => {
+      return {
+        startTime: timestamp,
+        endTime: timestamps[index + 1] ?? null,
+      };
+    })
+    .filter((timestamp) => timestamp.endTime);
 
-//   const sunLightHoursTimestampPairs = sunlightHourTimestamps
-//     .map((timestamp, index) => {
-//       return {
-//         startTime: timestamp,
-//         endTime: sunlightHourTimestamps[index + 1] ?? null,
-//       };
-//     })
-//     .filter((timestamp) => timestamp.endTime);
+  for (let i = startRow; i < endRow; i++) {
+    // add all the year periods
+    const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
+    const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
 
-//   for (let i = startRow; i < endRow; i++) {
-//     // add all the year periods
-//     const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
-//     const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
+    const startDate = (sheet[startDateRowCol] as ISheetCell)?.w as
+      | string
+      | undefined;
+    const endDate = (sheet[endDateRowCol] as ISheetCell)?.w as
+      | string
+      | undefined;
 
-//     const startDate = sheet[startDateRowCol]?.w;
-//     const endDate = sheet[endDateRowCol]?.w;
+    if (!startDate || !endDate) {
+      throw new Error("startDate and/or endDate missing");
+    }
 
-//     sunlightHoursDataColumns.forEach((column, index) => {
-//       const timestampPair = sunLightHoursTimestampPairs[index];
-//       const sunShine = sheet[`${column}${i.toString()}`]?.v;
+    sunlightHoursDataColumns.forEach((column, index) => {
+      const timestampPair = timestampPairs[index];
+      const sunShine = (sheet[`${column}${i.toString()}`] as ISheetCell)?.v;
 
-//       if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
-//         outletSunlightHours.push({
-//           id: uuidv4(),
-//           startTime: timestampPair?.startTime,
-//           endTime: timestampPair?.endTime,
-//           sunShine,
-//         });
-//       }
-//     });
+      if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
+        outletSunlightHours.push({
+          id: uuidv4(),
+          startTime: timestampPair.startTime,
+          endTime: timestampPair.endTime,
+          sunShine,
+        });
+      }
+    });
 
-//     // TODO: type
-//     const sunlightHourPayload = {
-//       // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-//       id: uuidv4(),
-//       startDate,
-//       endDate,
-//       outletSunlightHours,
-//     };
+    const sunlightHourPayload: Prisma.SunlightHourCreateInput = {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+      id: uuidv4(),
+      startDate,
+      endDate,
+      outletSunlightHours,
+    };
 
-//     createSunlightHoursInput.push(sunlightHourPayload);
-//   }
-//   createOutletInput["sunlightHours"] = createSunlightHoursInput;
-// }
+    createSunlightHoursInput.push(sunlightHourPayload);
+  }
+  Object.assign(createOutletInput, { sunlightHours: createSunlightHoursInput });
+}
 
 function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
@@ -281,7 +288,7 @@ function parseFile(filePath: string) {
     try {
       createOutletAddressInformationInput(sheet);
       createOutletOpeningHoursInput(sheet);
-      // createOutletSunlightHoursPayload(sheet);
+      createOutletSunlightHoursInput(sheet);
     } catch (err) {
       throw new Error();
     }
@@ -304,7 +311,6 @@ void (async () => {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
     }
-
     console.log(createOutletInput);
     console.log("√: Upload successful");
   } catch (err) {
