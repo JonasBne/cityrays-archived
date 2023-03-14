@@ -290,14 +290,12 @@ function parseFile(filePath: string) {
       createOutletOpeningHoursInput(sheet);
       createOutletSunlightHoursInput(sheet);
     } catch (err) {
-      throw new Error();
+      throw new Error(err as string);
     }
   } else {
     console.error("x: No valid sheet found");
   }
 }
-
-// TODO: add error handling?
 
 // TODO: add glob
 void (async () => {
