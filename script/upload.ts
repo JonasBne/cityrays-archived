@@ -266,7 +266,6 @@ function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
     });
 
     const sunlightHourPayload: Prisma.SunlightHourCreateInput = {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       id: uuidv4(),
       startDate,
       endDate,
@@ -297,7 +296,6 @@ function parseFile(filePath: string) {
   }
 }
 
-// TODO: add glob
 void (async () => {
   try {
     const fileNames = await readdir(
@@ -309,7 +307,6 @@ void (async () => {
       const filePath = path.join(filesDirectoryPath, file);
       parseFile(filePath);
     }
-    console.log(createOutletInput);
     console.log("√: Upload successful");
   } catch (err) {
     console.error("x: Upload failed. Error:", err);
