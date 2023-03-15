@@ -1,45 +1,61 @@
 import * as xlsx from "xlsx";
 import path from "node:path";
-import { readdir } from "node:fs/promises";
-import { filesDirectoryPath } from "@/config/paths";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { TypeOf } from "zod";
 
-type TAddressLabel =
-  | "name"
-  | "city"
-  | "street"
-  | "houseNumber"
-  | "zipCode"
-  | "category"
-  | "latitude"
-  | "longitude";
+// TODO: better to create obj with const
+// see alternative below
 
-enum EAddressSheetCells {
-  name = "B56",
-  city = "B57",
-  street = "B58",
-  houseNumber = "B59",
-  zipCode = "B60",
-  category = "B61",
-  latitude = "B62",
-  longitude = "B63",
-}
+// type TAddressLabel =
+//   | "name"
+//   | "city"
+//   | "street"
+//   | "houseNumber"
+//   | "zipCode"
+//   | "category"
+//   | "latitude"
+//   | "longitude";
 
-type TOutletAddressProperties = {
-  [key in TAddressLabel]: EAddressSheetCells;
-};
+// enum EAddressSheetCells {
+//   name = "B56",
+//   city = "B57",
+//   street = "B58",
+//   houseNumber = "B59",
+//   zipCode = "B60",
+//   category = "B61",
+//   latitude = "B62",
+//   longitude = "B63",
+// }
 
-const outletAddressProperties: TOutletAddressProperties = {
-  name: EAddressSheetCells.name,
-  city: EAddressSheetCells.city,
-  street: EAddressSheetCells.street,
-  houseNumber: EAddressSheetCells.houseNumber,
-  zipCode: EAddressSheetCells.zipCode,
-  category: EAddressSheetCells.category,
-  latitude: EAddressSheetCells.latitude,
-  longitude: EAddressSheetCells.longitude,
-};
+// type TOutletAddressProperties = {
+//   [key in TAddressLabel]: EAddressSheetCells;
+// };
+
+// const outletAddressProperties: TOutletAddressProperties = {
+//   name: EAddressSheetCells.name,
+//   city: EAddressSheetCells.city,
+//   street: EAddressSheetCells.street,
+//   houseNumber: EAddressSheetCells.houseNumber,
+//   zipCode: EAddressSheetCells.zipCode,
+//   category: EAddressSheetCells.category,
+//   latitude: EAddressSheetCells.latitude,
+//   longitude: EAddressSheetCells.longitude,
+// };
+
+const outletAddressProperties = {
+  name: "B56",
+  city: "B57",
+  street: "B58",
+  houseNumber: "B59",
+  zipCode: "B60",
+  category: "B61",
+  latitude: "B62",
+  longitude: "B63",
+} as const;
+
+// not needed but a good example how to use keyof
+type TAddressLabel = keyof typeof outletAddressProperties;
 
 type TWeekdaysLabel =
   | "monday"
@@ -50,6 +66,8 @@ type TWeekdaysLabel =
   | "saturday"
   | "sunday";
 
+// TODO: don't use enums
+// https://blog.logrocket.com/why-typescript-enums-suck/
 enum EWeekdaysSheetCells {
   MONDAY = "B70",
   TUESDAY = "B71",
@@ -84,6 +102,7 @@ const outletOpeningHoursProperties: TOutletWeekdaysProperties = {
 
 const startRow = 2;
 const endRow = 54;
+// TODO: define and and end, not the all columns
 const sunlightHoursDataColumns = [
   "C",
   "D",
@@ -155,16 +174,19 @@ const yearPeriodEndCol = "B";
 const prisma = new PrismaClient();
 
 // final payloads
+// TODO: don't work with global variables
 const createOutletInput = {} as Prisma.OutletCreateInput;
-const createOpeningHoursInput = [] as Prisma.OpeningHourCreateInput[];
+// const createOpeningHoursInput = [] as Prisma.OpeningHourCreateInput[];
 const createSunlightHoursInput = [] as Prisma.SunlightHourCreateInput[];
 
 // temporary payloads
 const outletSunlightHours: Array<any> = [];
 
+// TODO: make pure function
+// I did the refactor already
 function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
-  Object.entries(outletAddressProperties).forEach(([key, value]) => {
-    const label = key as TAddressLabel;
+  const entries = Object.entries(outletAddressProperties);
+  const info = entries.reduce((acc, [key, value]) => {
     const cell = value;
     const cellValue = (sheet[cell] as ISheetCell)?.v as
       | string
@@ -172,13 +194,22 @@ function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
       | undefined;
 
     if (cellValue) {
-      Object.assign(createOutletInput, { [label]: cellValue });
+      acc[key] = cellValue;
     }
-  });
+    return acc;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  }, {} as Record<string, any>);
+  return info as Prisma.OutletCreateInput;
 }
 
-function createOutletOpeningHoursInput(sheet: xlsx.WorkSheet) {
-  Object.entries(outletOpeningHoursProperties).forEach(([key, value]) => {
+// TODO: make pure function
+// I did the refactor already
+function createOutletOpeningHoursInput(
+  sheet: xlsx.WorkSheet,
+  outlet: Prisma.OutletCreateInput
+): Prisma.OutletCreateInput {
+  const entries = Object.entries(outletOpeningHoursProperties);
+  const openingHours = entries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
     const cell = value;
     const cellValue = ((sheet[cell] as ISheetCell)?.v || null) as string | null;
@@ -206,15 +237,18 @@ function createOutletOpeningHoursInput(sheet: xlsx.WorkSheet) {
     // @Peter: if you remove this ts-ignore then ts will warn that type openAt of string | null
     // is not assignable to type string, but my schema says that openAt and closesAt are optional
     // so I'm not sure why this does not work
+    acc.push(openingHour);
+    return acc;
+  }, [] as Prisma.OpeningHourCreateInput[]);
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    createOpeningHoursInput.push(openingHour);
-  });
-
-  Object.assign(createOutletInput, { openingHours: createOpeningHoursInput });
+  // create new object, don't modify the original
+  return {
+    ...outlet,
+    openingHours,
+  };
 }
 
+// TODO: make pure function
 function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
   const timestamps = sunlightHoursDataColumns
     .map((column) => {
@@ -287,12 +321,14 @@ function parseFile(filePath: string) {
 
   const sheetName = workbook.SheetNames[0];
   const sheet = sheetName ? workbook.Sheets[sheetName] : undefined;
-
   if (sheet) {
     try {
-      createOutletAddressInformationInput(sheet);
-      createOutletOpeningHoursInput(sheet);
-      createOutletSunlightHoursInput(sheet);
+      let outletInput = createOutletAddressInformationInput(sheet);
+      outletInput = createOutletOpeningHoursInput(sheet, outletInput);
+      // TODO: refactor as pure function
+      // outletInput = createOutletSunlightHoursInput(sheet);
+      console.log("outletInput: ", outletInput);
+      // TODO: don't catch and rethrow, just let the error bubble up
     } catch (err) {
       throw new Error(err as string);
     }
@@ -301,19 +337,30 @@ function parseFile(filePath: string) {
   }
 }
 
-void (async () => {
+function handleUpload() {
   try {
-    const fileNames = await readdir(
-      path.join(process.cwd(), filesDirectoryPath)
-    );
-    const files = fileNames.filter((fileName) => fileName.includes(".xlsx"));
+    const firstFile = process.argv[2];
+    if (!firstFile) {
+      console.log("Usage: tsx ./script/upload.ts <file glob>");
+      process.exit(1);
+      return;
+    }
 
-    for (const file of files) {
-      const filePath = path.join(filesDirectoryPath, file);
+    // TODO: get directory from command line arg
+    const fileNames = process.argv
+      .slice(2)
+      .filter((arg: string) => !arg.startsWith("~$")); // remove temp excel files
+
+    // Loop over files
+    for (const fileName of fileNames) {
+      const filePath = path.join(process.cwd(), fileName);
+      console.log("processing: ", fileName);
       parseFile(filePath);
     }
     console.log("√: Upload successful");
   } catch (err) {
     console.error("x: Upload failed. Error:", err);
   }
-})();
+}
+
+handleUpload();
