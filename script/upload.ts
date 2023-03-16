@@ -3,6 +3,12 @@ import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
+// TODO
+// add quick fail methods
+// remove try catch blocks with thrown errors
+// add upsert for an outlet with unique condition on outlet name + coordinates
+// change position coordinates to geospatial json instead of ints
+
 /**
  * types
  */
