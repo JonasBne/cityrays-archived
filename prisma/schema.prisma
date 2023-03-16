@@ -2,12 +2,12 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+  provider = "prisma-client-js"
 }
 
 datasource db {
-    provider = "mongodb"
-    url      = env("DATABASE_URL")
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
 }
 
 // See also:
@@ -15,36 +15,36 @@ datasource db {
 // https://www.prisma.io/docs/concepts/components/prisma-client/composite-types
 
 model Outlet {
-  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  id            String         @id @default(auto()) @map("_id") @db.ObjectId
   name          String
   street        String
   houseNumber   Int
   city          String
   zipCode       Int
   category      String
-  latitude      Int
+  latitude      Int // TODO: use https://www.mongodb.com/docs/manual/geospatial-queries/
   longitude     Int
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
 }
 
 type OpeningHour {
-  id            String
-  weekday       String
-  openAt        String?
-  closesAt      String?
+  id       String
+  weekday  String
+  openAt   String?
+  closesAt String?
 }
 
 type SunlightHour {
-  id            String
-  startDate     String
-  endDate       String  
+  id                  String
+  startDate           String
+  endDate             String
   outletSunlightHours OutletSunlightHour[]
 }
 
 type OutletSunlightHour {
-  id          String
-  startTime   String
-  endTime     String
-  sunShine    Int
+  id        String
+  startTime String
+  endTime   String
+  sunShine  Int
 }
