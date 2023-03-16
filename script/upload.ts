@@ -2,7 +2,6 @@ import * as xlsx from "xlsx";
 import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
-import { TypeOf } from "zod";
 
 // TODO: better to create obj with const
 // see alternative below
@@ -54,7 +53,6 @@ const outletAddressProperties = {
   longitude: "B63",
 } as const;
 
-// not needed but a good example how to use keyof
 type TAddressLabel = keyof typeof outletAddressProperties;
 
 type TWeekdaysLabel =
@@ -183,27 +181,28 @@ const createSunlightHoursInput = [] as Prisma.SunlightHourCreateInput[];
 const outletSunlightHours: Array<any> = [];
 
 // TODO: make pure function
-// I did the refactor already
+// I did the refactor already :)
 function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   const entries = Object.entries(outletAddressProperties);
   const info = entries.reduce((acc, [key, value]) => {
     const cell = value;
+    const label = key as TAddressLabel;
     const cellValue = (sheet[cell] as ISheetCell)?.v as
       | string
       | number
       | undefined;
 
     if (cellValue) {
-      acc[key] = cellValue;
+      acc[label] = cellValue;
     }
     return acc;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }, {} as Record<string, any>);
+  }, {} as Record<TAddressLabel, any>);
   return info as Prisma.OutletCreateInput;
 }
 
 // TODO: make pure function
-// I did the refactor already
+// I did the refactor already :)
 function createOutletOpeningHoursInput(
   sheet: xlsx.WorkSheet,
   outlet: Prisma.OutletCreateInput
@@ -305,7 +304,7 @@ function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
     });
 
     const sunlightHourPayload: Prisma.SunlightHourCreateInput = {
-      id: uuidv4(),
+      id: uuidv4(), // TODO: better to use ObjectID or sequential ID
       startDate,
       endDate,
       outletSunlightHours,
@@ -337,7 +336,7 @@ function parseFile(filePath: string) {
   }
 }
 
-function handleUpload() {
+(() => {
   try {
     const firstFile = process.argv[2];
     if (!firstFile) {
@@ -346,7 +345,8 @@ function handleUpload() {
       return;
     }
 
-    // TODO: get directory from command line arg
+    // TODO: get wildcard from command line arg
+    // I did the refactor already :)
     const fileNames = process.argv
       .slice(2)
       .filter((arg: string) => !arg.startsWith("~$")); // remove temp excel files
@@ -361,6 +361,4 @@ function handleUpload() {
   } catch (err) {
     console.error("x: Upload failed. Error:", err);
   }
-}
-
-handleUpload();
+})();
