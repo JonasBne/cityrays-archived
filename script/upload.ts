@@ -3,44 +3,9 @@ import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-// TODO: better to create obj with const
-// see alternative below
-
-// type TAddressLabel =
-//   | "name"
-//   | "city"
-//   | "street"
-//   | "houseNumber"
-//   | "zipCode"
-//   | "category"
-//   | "latitude"
-//   | "longitude";
-
-// enum EAddressSheetCells {
-//   name = "B56",
-//   city = "B57",
-//   street = "B58",
-//   houseNumber = "B59",
-//   zipCode = "B60",
-//   category = "B61",
-//   latitude = "B62",
-//   longitude = "B63",
-// }
-
-// type TOutletAddressProperties = {
-//   [key in TAddressLabel]: EAddressSheetCells;
-// };
-
-// const outletAddressProperties: TOutletAddressProperties = {
-//   name: EAddressSheetCells.name,
-//   city: EAddressSheetCells.city,
-//   street: EAddressSheetCells.street,
-//   houseNumber: EAddressSheetCells.houseNumber,
-//   zipCode: EAddressSheetCells.zipCode,
-//   category: EAddressSheetCells.category,
-//   latitude: EAddressSheetCells.latitude,
-//   longitude: EAddressSheetCells.longitude,
-// };
+/**
+ * types
+ */
 
 const outletAddressProperties = {
   name: "B56",
@@ -55,48 +20,17 @@ const outletAddressProperties = {
 
 type TAddressLabel = keyof typeof outletAddressProperties;
 
-type TWeekdaysLabel =
-  | "monday"
-  | "tuesday"
-  | "wednesday"
-  | "thursday"
-  | "friday"
-  | "saturday"
-  | "sunday";
+const outletOpeningHoursProperties = {
+  monday: "B70",
+  tuesday: "B71",
+  wednesday: "B72",
+  thursday: "B73",
+  friday: "B74",
+  saturday: "B75",
+  sunday: "B76",
+} as const;
 
-// TODO: don't use enums
-// https://blog.logrocket.com/why-typescript-enums-suck/
-enum EWeekdaysSheetCells {
-  MONDAY = "B70",
-  TUESDAY = "B71",
-  WEDNESDAY = "B72",
-  THURSDAY = "B73",
-  FRIDAY = "B74",
-  SATURDAY = "B75",
-  SUNDAY = "B76",
-}
-
-type TOutletWeekdaysProperties = {
-  [key in TWeekdaysLabel]: EWeekdaysSheetCells;
-};
-
-interface ISheetCell {
-  t: unknown;
-  v: unknown;
-  r: unknown;
-  h: unknown;
-  w: unknown;
-}
-
-const outletOpeningHoursProperties: TOutletWeekdaysProperties = {
-  monday: EWeekdaysSheetCells.MONDAY,
-  tuesday: EWeekdaysSheetCells.TUESDAY,
-  wednesday: EWeekdaysSheetCells.WEDNESDAY,
-  thursday: EWeekdaysSheetCells.THURSDAY,
-  friday: EWeekdaysSheetCells.FRIDAY,
-  saturday: EWeekdaysSheetCells.SATURDAY,
-  sunday: EWeekdaysSheetCells.SUNDAY,
-};
+type TWeekdaysLabel = keyof typeof outletOpeningHoursProperties;
 
 const startRow = 2;
 const endRow = 54;
@@ -187,17 +121,15 @@ function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   const info = entries.reduce((acc, [key, value]) => {
     const cell = value;
     const label = key as TAddressLabel;
-    const cellValue = (sheet[cell] as ISheetCell)?.v as
-      | string
-      | number
-      | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const cellValue = sheet[cell]?.v as string | number | undefined;
 
     if (cellValue) {
       acc[label] = cellValue;
     }
     return acc;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }, {} as Record<TAddressLabel, any>);
+  }, {} as Record<TAddressLabel, string | number | undefined>);
   return info as Prisma.OutletCreateInput;
 }
 
@@ -211,7 +143,8 @@ function createOutletOpeningHoursInput(
   const openingHours = entries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
     const cell = value;
-    const cellValue = ((sheet[cell] as ISheetCell)?.v || null) as string | null;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const cellValue = (sheet[cell]?.v || null) as string | null;
 
     // split on the '-' character to separate open and closing time if available
     // so 10:00-12:00 becomes ['10:00', '12:00'] or ['10:00', null]
@@ -236,7 +169,8 @@ function createOutletOpeningHoursInput(
     // @Peter: if you remove this ts-ignore then ts will warn that type openAt of string | null
     // is not assignable to type string, but my schema says that openAt and closesAt are optional
     // so I'm not sure why this does not work
-    acc.push(openingHour);
+    // TODO: can we remove this? no longer needed I think
+    // acc.push(openingHour);
     return acc;
   }, [] as Prisma.OpeningHourCreateInput[]);
 
@@ -251,9 +185,8 @@ function createOutletOpeningHoursInput(
 function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
   const timestamps = sunlightHoursDataColumns
     .map((column) => {
-      const timestamp = (sheet[`${column}1`] as ISheetCell)?.w as
-        | string
-        | undefined;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const timestamp = sheet[`${column}1`]?.w as string | undefined;
 
       if (timestamp) {
         return timestamp;
@@ -278,12 +211,10 @@ function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
     const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
     const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
 
-    const startDate = (sheet[startDateRowCol] as ISheetCell)?.w as
-      | string
-      | undefined;
-    const endDate = (sheet[endDateRowCol] as ISheetCell)?.w as
-      | string
-      | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const startDate = sheet[startDateRowCol]?.w as string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    const endDate = sheet[endDateRowCol]?.w as string | undefined;
 
     if (!startDate || !endDate) {
       throw new Error("startDate and/or endDate missing");
@@ -291,7 +222,8 @@ function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
 
     sunlightHoursDataColumns.forEach((column, index) => {
       const timestampPair = timestampPairs[index];
-      const sunShine = (sheet[`${column}${i.toString()}`] as ISheetCell)?.v;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      const sunShine = sheet[`${column}${i.toString()}`]?.v as number;
 
       if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
         outletSunlightHours.push({
