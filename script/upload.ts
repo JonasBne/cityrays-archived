@@ -213,7 +213,7 @@ function getTimestampPairs(sheet: xlsx.WorkSheet): Array<TimestampPair> {
 function createOutletSunlightHoursInput(
   sheet: xlsx.WorkSheet,
   outlet: Prisma.OutletCreateInput
-): Prisma.OutletCreateInput | any {
+): Prisma.OutletCreateInput {
   const outletSunlightHoursInput = [] as Array<Prisma.SunlightHourCreateInput>;
 
   const timestampPairs = getTimestampPairs(sheet);
@@ -269,7 +269,14 @@ function createOutletSunlightHoursInput(
   };
 }
 
-function parseFile(filePath: string) {
+async function createOutlet(outletInput: Prisma.OutletCreateInput) {
+  const outlet = await prisma.outlet.create({
+    data: outletInput,
+  });
+
+  return outlet;
+}
+async function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
 
   const sheetName = workbook.SheetNames[0];
@@ -282,13 +289,15 @@ function parseFile(filePath: string) {
   let outletInput = createOutletAddressInformationInput(sheet);
   outletInput = createOutletOpeningHoursInput(sheet, outletInput);
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
+
+  await createOutlet(outletInput);
 }
 
 /**
  * file upload
  */
 
-(() => {
+void (async () => {
   try {
     const firstFile = process.argv[2];
 
@@ -305,7 +314,7 @@ function parseFile(filePath: string) {
     for (const fileName of fileNames) {
       const filePath = path.join(process.cwd(), fileName);
       console.log("Processing: ", fileName);
-      parseFile(filePath);
+      await parseFile(filePath);
     }
     console.log("√: Upload successful");
   } catch (err) {
