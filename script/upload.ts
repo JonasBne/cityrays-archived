@@ -293,7 +293,7 @@ function parseFile(filePath: string) {
     const firstFile = process.argv[2];
 
     if (!firstFile) {
-      console.log("Usage: tsx ./script/upload.ts <file glob>");
+      console.error("x: Upload failed. No file found.");
       process.exit(1);
     }
 
@@ -304,7 +304,7 @@ function parseFile(filePath: string) {
     // loop over files
     for (const fileName of fileNames) {
       const filePath = path.join(process.cwd(), fileName);
-      console.log("processing: ", fileName);
+      console.log("Processing: ", fileName);
       parseFile(filePath);
     }
     console.log("√: Upload successful");

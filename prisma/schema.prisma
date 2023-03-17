@@ -22,7 +22,7 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  latitude      Int // TODO: use https://www.mongodb.com/docs/manual/geospatial-queries/
+  latitude      Int
   longitude     Int
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
