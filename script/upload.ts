@@ -1,3 +1,7 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import * as xlsx from "xlsx";
 import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
@@ -5,7 +9,6 @@ import { v4 as uuidv4 } from "uuid";
 
 // TODO
 // add quick fail methods
-// remove try catch blocks with thrown errors
 // add upsert for an outlet with unique condition on outlet name + coordinates
 // change position coordinates to geospatial json instead of ints
 
@@ -152,7 +155,6 @@ function createOutletOpeningHoursInput(
   const openingHours = entries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
     const cell = value;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const cellValue = (sheet[cell]?.v || null) as string | null;
 
     // split on the '-' character to separate open and closing time if available
@@ -175,7 +177,6 @@ function createOutletOpeningHoursInput(
       closesAt,
     };
 
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     acc.push(openingHour);
     return acc;
@@ -192,7 +193,6 @@ function getTimestampPairs(sheet: xlsx.WorkSheet): Array<TimestampPair> {
   // grab all the timestamps in the file and group them in pairs with a start and end time
   // and filter out any pairs that have no end time
   const timestamps = sunlightHoursDataColumns.map(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
     (column) => sheet[`${column}1`]?.w
   ) as Array<string>;
 
@@ -221,15 +221,12 @@ function createOutletSunlightHoursInput(
   for (let i = startRow; i < endRow; i++) {
     // for each row determine the start and end period based on the year period columns
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const startDate = sheet[`A${i}`]?.w as string;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const endDate = sheet[`B${i}`]?.w as string;
 
     const outletSunlightHours = sunlightHoursDataColumns
       .map(
         (column, index): Prisma.OutletSunlightHourCreateInput | undefined => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
           const value = sheet[`${column}${i}`]?.v;
 
           // the current timestamp pair can be derived from the current column index
@@ -244,7 +241,6 @@ function createOutletSunlightHoursInput(
               id: uuidv4(),
               startTime: currentTimestampPair.startTime,
               endTime: currentTimestampPair.endTime,
-              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
               sunShine: value,
             };
           }
