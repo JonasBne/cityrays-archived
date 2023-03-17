@@ -38,9 +38,17 @@ const outletOpeningHoursProperties = {
 
 type TWeekdaysLabel = keyof typeof outletOpeningHoursProperties;
 
+interface TimestampPair {
+  startTime: string;
+  endTime: string;
+}
+
+/**
+ * consts excel file
+ */
+
 const startRow = 2;
 const endRow = 54;
-// TODO: define and and end, not the all columns
 const sunlightHoursDataColumns = [
   "C",
   "D",
@@ -106,25 +114,20 @@ const sunlightHoursDataColumns = [
   "BL",
 ];
 
-const yearPeriodStartCol = "A";
-const yearPeriodEndCol = "B";
+/**
+ * prisma client
+ */
 
 const prisma = new PrismaClient();
 
-// final payloads
-// TODO: don't work with global variables
-const createOutletInput = {} as Prisma.OutletCreateInput;
-// const createOpeningHoursInput = [] as Prisma.OpeningHourCreateInput[];
-const createSunlightHoursInput = [] as Prisma.SunlightHourCreateInput[];
+/**
+ * helper functions
+ */
 
-// temporary payloads
-const outletSunlightHours: Array<any> = [];
-
-// TODO: make pure function
-// I did the refactor already :)
 function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   const entries = Object.entries(outletAddressProperties);
-  const info = entries.reduce((acc, [key, value]) => {
+
+  const addressInformation = entries.reduce((acc, [key, value]) => {
     const cell = value;
     const label = key as TAddressLabel;
     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
@@ -136,16 +139,16 @@ function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
     return acc;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }, {} as Record<TAddressLabel, string | number | undefined>);
-  return info as Prisma.OutletCreateInput;
+
+  return addressInformation as Prisma.OutletCreateInput;
 }
 
-// TODO: make pure function
-// I did the refactor already :)
 function createOutletOpeningHoursInput(
   sheet: xlsx.WorkSheet,
   outlet: Prisma.OutletCreateInput
 ): Prisma.OutletCreateInput {
   const entries = Object.entries(outletOpeningHoursProperties);
+
   const openingHours = entries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
     const cell = value;
@@ -172,11 +175,9 @@ function createOutletOpeningHoursInput(
       closesAt,
     };
 
-    // @Peter: if you remove this ts-ignore then ts will warn that type openAt of string | null
-    // is not assignable to type string, but my schema says that openAt and closesAt are optional
-    // so I'm not sure why this does not work
-    // TODO: can we remove this? no longer needed I think
-    // acc.push(openingHour);
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    acc.push(openingHour);
     return acc;
   }, [] as Prisma.OpeningHourCreateInput[]);
 
@@ -187,70 +188,89 @@ function createOutletOpeningHoursInput(
   };
 }
 
-// TODO: make pure function
-function createOutletSunlightHoursInput(sheet: xlsx.WorkSheet) {
-  const timestamps = sunlightHoursDataColumns
-    .map((column) => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      const timestamp = sheet[`${column}1`]?.w as string | undefined;
+function getTimestampPairs(sheet: xlsx.WorkSheet): Array<TimestampPair> {
+  // grab all the timestamps in the file and group them in pairs with a start and end time
+  // and filter out any pairs that have no end time
+  const timestamps = sunlightHoursDataColumns.map(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
+    (column) => sheet[`${column}1`]?.w
+  ) as Array<string>;
 
-      if (timestamp) {
-        return timestamp;
-      }
-    })
-    .filter(
-      (timestamp): timestamp is Required<string> =>
-        typeof timestamp !== undefined
-    );
-
-  const timestampPairs = timestamps
+  return timestamps
     .map((timestamp, index) => {
       return {
         startTime: timestamp,
-        endTime: timestamps[index + 1] ?? null,
+        // look for the next position in the original array
+        endTime: timestamps[index + 1],
       };
     })
-    .filter((timestamp) => timestamp.endTime);
+    .filter(
+      (timestampPair) =>
+        timestampPair && timestampPair.startTime && timestampPair.endTime
+    ) as Array<TimestampPair>;
+}
+
+function createOutletSunlightHoursInput(
+  sheet: xlsx.WorkSheet,
+  outlet: Prisma.OutletCreateInput
+): Prisma.OutletCreateInput | any {
+  const outletSunlightHoursInput = [] as Array<Prisma.SunlightHourCreateInput>;
+
+  const timestampPairs = getTimestampPairs(sheet);
 
   for (let i = startRow; i < endRow; i++) {
-    // add all the year periods
-    const startDateRowCol = `${yearPeriodStartCol}${i.toString()}`;
-    const endDateRowCol = `${yearPeriodEndCol}${i.toString()}`;
+    // for each row determine the start and end period based on the year period columns
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const startDate = sheet[startDateRowCol]?.w as string | undefined;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const endDate = sheet[endDateRowCol]?.w as string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const startDate = sheet[`A${i}`]?.w as string;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const endDate = sheet[`B${i}`]?.w as string;
 
-    if (!startDate || !endDate) {
-      throw new Error("startDate and/or endDate missing");
-    }
+    const outletSunlightHours = sunlightHoursDataColumns
+      .map(
+        (column, index): Prisma.OutletSunlightHourCreateInput | undefined => {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+          const value = sheet[`${column}${i}`]?.v;
 
-    sunlightHoursDataColumns.forEach((column, index) => {
-      const timestampPair = timestampPairs[index];
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-      const sunShine = sheet[`${column}${i.toString()}`]?.v as number;
+          // the current timestamp pair can be derived from the current column index
+          // if we are for example in the first data column that contains sunshine we are at index 0
+          // and this matches to the timestamp pair at index 0, which is 07:00-07:15
+          // so we can use to extract the start and end time
+          const currentTimestampPair = timestampPairs[index];
 
-      if (timestampPair && timestampPair.startTime && timestampPair.endTime) {
-        outletSunlightHours.push({
-          id: uuidv4(),
-          startTime: timestampPair.startTime,
-          endTime: timestampPair.endTime,
-          sunShine,
-        });
-      }
-    });
+          // the first column has index 0 and that corresponds to index 0 in the timestampPairs array
+          if (currentTimestampPair) {
+            return {
+              id: uuidv4(),
+              startTime: currentTimestampPair.startTime,
+              endTime: currentTimestampPair.endTime,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+              sunShine: value,
+            };
+          }
+        }
+      )
+      .filter(
+        (
+          outletSunlightHourInput
+        ): outletSunlightHourInput is Required<Prisma.OutletSunlightHourCreateInput> =>
+          outletSunlightHourInput !== undefined
+      );
 
-    const sunlightHourPayload: Prisma.SunlightHourCreateInput = {
-      id: uuidv4(), // TODO: better to use ObjectID or sequential ID
+    const input: Prisma.SunlightHourCreateInput = {
+      id: uuidv4(),
       startDate,
       endDate,
       outletSunlightHours,
     };
 
-    createSunlightHoursInput.push(sunlightHourPayload);
+    outletSunlightHoursInput.push(input);
   }
-  Object.assign(createOutletInput, { sunlightHours: createSunlightHoursInput });
+
+  return {
+    ...outlet,
+    sunlightHours: outletSunlightHoursInput,
+  };
 }
 
 function parseFile(filePath: string) {
@@ -258,38 +278,34 @@ function parseFile(filePath: string) {
 
   const sheetName = workbook.SheetNames[0];
   const sheet = sheetName ? workbook.Sheets[sheetName] : undefined;
-  if (sheet) {
-    try {
-      let outletInput = createOutletAddressInformationInput(sheet);
-      outletInput = createOutletOpeningHoursInput(sheet, outletInput);
-      // TODO: refactor as pure function
-      // outletInput = createOutletSunlightHoursInput(sheet);
-      console.log("outletInput: ", outletInput);
-      // TODO: don't catch and rethrow, just let the error bubble up
-    } catch (err) {
-      throw new Error(err as string);
-    }
-  } else {
-    console.error("x: No valid sheet found");
+
+  if (!sheet) {
+    return;
   }
+
+  let outletInput = createOutletAddressInformationInput(sheet);
+  outletInput = createOutletOpeningHoursInput(sheet, outletInput);
+  outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 }
+
+/**
+ * file upload
+ */
 
 (() => {
   try {
     const firstFile = process.argv[2];
+
     if (!firstFile) {
       console.log("Usage: tsx ./script/upload.ts <file glob>");
       process.exit(1);
-      return;
     }
 
-    // TODO: get wildcard from command line arg
-    // I did the refactor already :)
     const fileNames = process.argv
       .slice(2)
       .filter((arg: string) => !arg.startsWith("~$")); // remove temp excel files
 
-    // Loop over files
+    // loop over files
     for (const fileName of fileNames) {
       const filePath = path.join(process.cwd(), fileName);
       console.log("processing: ", fileName);
