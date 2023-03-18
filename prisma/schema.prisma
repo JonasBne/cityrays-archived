@@ -22,8 +22,8 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  latitude      Int
-  longitude     Int
+  latitude      Int   @unique
+  longitude     Int   @unique
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
 }

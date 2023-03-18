@@ -269,9 +269,13 @@ function createOutletSunlightHoursInput(
   };
 }
 
-async function createOutlet(outletInput: Prisma.OutletCreateInput) {
-  const outlet = await prisma.outlet.create({
-    data: outletInput,
+async function upsertOutlet(outletInput: Prisma.OutletCreateInput) {
+  const outlet = await prisma.outlet.upsert({
+    where: {
+      latitude: outletInput.latitude,
+    },
+    update: outletInput,
+    create: outletInput,
   });
 
   return outlet;
@@ -290,7 +294,7 @@ async function parseFile(filePath: string) {
   outletInput = createOutletOpeningHoursInput(sheet, outletInput);
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  await createOutlet(outletInput);
+  return await upsertOutlet(outletInput);
 }
 
 /**
@@ -314,7 +318,12 @@ void (async () => {
     for (const fileName of fileNames) {
       const filePath = path.join(process.cwd(), fileName);
       console.log("Processing: ", fileName);
-      await parseFile(filePath);
+
+      const outlet = await parseFile(filePath);
+
+      if (!outlet) {
+        return console.error("x: Upload failed.");
+      }
     }
     console.log("√: Upload successful");
   } catch (err) {
