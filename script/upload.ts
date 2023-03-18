@@ -7,11 +7,6 @@ import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
-// TODO
-// add quick fail methods
-// add upsert for an outlet with unique condition on outlet name + coordinates
-// change position coordinates to geospatial json instead of ints
-
 /**
  * types
  */
@@ -130,20 +125,31 @@ const prisma = new PrismaClient();
 function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   const entries = Object.entries(outletAddressProperties);
 
-  const addressInformation = entries.reduce((acc, [key, value]) => {
-    const cell = value;
-    const label = key as TAddressLabel;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-    const cellValue = sheet[cell]?.v as string | number | undefined;
+  const { latitude, longitude, ...addressInformation } = entries.reduce(
+    (acc, [key, value]) => {
+      const cell = value;
+      const label = key as TAddressLabel;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      const cellValue = sheet[cell]?.v as string | number | undefined;
 
-    if (cellValue) {
-      acc[label] = cellValue;
-    }
-    return acc;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  }, {} as Record<TAddressLabel, string | number | undefined>);
+      if (cellValue) {
+        acc[label] = cellValue;
+      }
+      return acc;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    },
+    {} as Record<TAddressLabel, string | number | undefined>
+  );
 
-  return addressInformation as Prisma.OutletCreateInput;
+  const location = {
+    type: "MultiPoint",
+    coordinates: [longitude, latitude],
+  };
+
+  return {
+    ...addressInformation,
+    location,
+  } as Prisma.OutletCreateInput;
 }
 
 function createOutletOpeningHoursInput(
@@ -272,7 +278,7 @@ function createOutletSunlightHoursInput(
 async function upsertOutlet(outletInput: Prisma.OutletCreateInput) {
   const outlet = await prisma.outlet.upsert({
     where: {
-      latitude: outletInput.latitude,
+      location: outletInput.location,
     },
     update: outletInput,
     create: outletInput,
@@ -280,6 +286,7 @@ async function upsertOutlet(outletInput: Prisma.OutletCreateInput) {
 
   return outlet;
 }
+
 async function parseFile(filePath: string) {
   const workbook = xlsx.readFile(filePath);
 
@@ -319,11 +326,7 @@ void (async () => {
       const filePath = path.join(process.cwd(), fileName);
       console.log("Processing: ", fileName);
 
-      const outlet = await parseFile(filePath);
-
-      if (!outlet) {
-        return console.error("x: Upload failed.");
-      }
+      await parseFile(filePath);
     }
     console.log("√: Upload successful");
   } catch (err) {
