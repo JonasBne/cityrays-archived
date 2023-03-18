@@ -7,6 +7,8 @@ import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 
+// TODO: add support for multiple openingHours on a single day
+
 /**
  * types
  */
