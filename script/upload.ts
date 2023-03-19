@@ -174,6 +174,7 @@ function createOutletOpeningHoursInput(
       // times for a given day
       if (cellValue.includes(";")) {
         const openingHoursPair = cellValue.split(";");
+        // also split again on - character to separate open and closing time
         return openingHoursPair.map((openingHoursPair) =>
           openingHoursPair.split("-")
         );
@@ -184,8 +185,10 @@ function createOutletOpeningHoursInput(
       return cellValue.split("-");
     };
 
-    // if the lenght is four then it contains multiple hours for a given day
-    // and then we create two objects instead of one
+    // if the length is four then it contains multiple hours for a given day
+    // and then we create two objects instead of one, but just loop over the initial array
+    // which contains two elements, each representing a pair of open and closing times
+    // for that day
     if (openingHours()?.flat().length === 4) {
       openingHours()?.forEach((openingHoursPair) => {
         const openingHour = {
