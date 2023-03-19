@@ -165,28 +165,48 @@ function createOutletOpeningHoursInput(
     const cell = value;
     const cellValue = (sheet[cell]?.v || null) as string | null;
 
-    // split on the '-' character to separate open and closing time if available
-    // so 10:00-12:00 becomes ['10:00', '12:00'] or ['10:00', null]
-    const openingHours = cellValue ? cellValue.split("-") : null;
+    const openingHours = () => {
+      if (!cellValue) {
+        return null;
+      }
 
-    const openAt =
-      openingHours && openingHours.length > 0 && openingHours[0]
-        ? openingHours[0]
-        : null;
-    const closesAt =
-      openingHours && openingHours.length > 0 && openingHours[1]
-        ? openingHours[1]
-        : null;
+      // if the cellValue includes a ; character it contains multiple opening and closing
+      // times for a given day
+      if (cellValue.includes(";")) {
+        const openingHoursPair = cellValue.split(";");
+        return openingHoursPair.map((openingHoursPair) =>
+          openingHoursPair.split("-")
+        );
+      }
 
-    const openingHour = {
-      id: uuidv4(),
-      weekday,
-      openAt,
-      closesAt,
+      // split on the '-' character to separate open and closing time if available
+      // so 10:00-12:00 becomes ['10:00', '12:00'] or ['10:00', null]
+      return cellValue.split("-");
     };
 
-    // @ts-ignore
-    acc.push(openingHour);
+    // if the lenght is four then it contains multiple hours for a given day
+    // and then we create two objects instead of one
+    if (openingHours()?.flat().length === 4) {
+      openingHours()?.forEach((openingHoursPair) => {
+        const openingHour = {
+          id: uuidv4(),
+          weekday,
+          openAt: openingHoursPair[0] || null,
+          closesAt: openingHoursPair[1] || null,
+        };
+        // @ts-ignore
+        acc.push(openingHour);
+      });
+    } else {
+      const openingHour = {
+        id: uuidv4(),
+        weekday,
+        openAt: openingHours()?.[0] || null,
+        closesAt: openingHours()?.[1] || null,
+      };
+      // @ts-ignore
+      acc.push(openingHour);
+    }
     return acc;
   }, [] as Prisma.OpeningHourCreateInput[]);
 
