@@ -321,7 +321,7 @@ void (async () => {
 
     const fileNames = process.argv
       .slice(2)
-      .filter((arg: string) => !arg.startsWith("~$")); // remove temp excel files
+      .filter((arg: string) => !arg.includes("~$")); // remove temp excel files
 
     // loop over files
     for (const fileName of fileNames) {
