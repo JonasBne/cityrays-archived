@@ -2,14 +2,7 @@ import { type NextPage } from "next";
 import { useSession, signOut, signIn } from "next-auth/react";
 
 const Login: NextPage = () => {
-  const { data: sessionData } = useSession({
-    required: true,
-    onUnauthenticated() {
-      console.log("not authenticated");
-    },
-  });
-
-  console.log("data", sessionData);
+  const { data: sessionData } = useSession();
 
   return (
     <div className="flex flex-col items-center justify-center gap-4">
