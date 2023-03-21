@@ -1,3 +1,6 @@
+import { env } from "@/env.mjs";
+import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { PrismaClient } from "@prisma/client";
 import { type GetServerSidePropsContext } from "next";
 import {
   getServerSession,
@@ -5,7 +8,8 @@ import {
   type DefaultSession,
 } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { env } from "@/env.mjs";
+
+const prisma = new PrismaClient();
 
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
@@ -43,7 +47,7 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: env.GOOGLE_CLIENT_ID,
