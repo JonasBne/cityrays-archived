@@ -3,8 +3,13 @@ import Head from "next/head";
 
 import { SITE_TITLE } from "@/config";
 import Login from "./Login";
+import { api } from "@/utils/api";
 
 const Home: NextPage = () => {
+  const { data: outlets } = api.outlet.getAll.useQuery();
+
+  console.log("outlets", outlets);
+
   return (
     <>
       <Head>
