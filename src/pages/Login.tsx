@@ -10,7 +10,7 @@ const Login: NextPage = () => {
         {sessionData && <span>Logged in as {sessionData.user?.name}</span>}
       </p>
       <button
-        className="rounded-full bg-white/10 px-10 py-3 font-semibold text-white no-underline transition hover:bg-white/20"
+        className="rounded-full bg-slate-700 px-10 py-3 font-semibold text-white no-underline transition hover:bg-slate-600"
         onClick={sessionData ? () => void signOut() : () => void signIn()}
       >
         {sessionData ? "Sign out" : "Sign in with Google"}
