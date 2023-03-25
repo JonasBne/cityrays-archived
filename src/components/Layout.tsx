@@ -1,9 +1,10 @@
 import { SITE_TITLE } from "@/config";
 import React from "react";
 import Head from "next/head";
+import { Header } from "./Header";
 
 interface IProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   pageTitle: string;
 }
 
@@ -32,6 +33,7 @@ export const Layout = ({ children, pageTitle }: IProps) => {
         />
         <link rel="manifest" href="/site.webmanifest" />
       </Head>
+      <Header />
       <main className="flex min-h-screen flex-col items-center justify-center">
         {children}
       </main>

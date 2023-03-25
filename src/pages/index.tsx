@@ -16,11 +16,7 @@ const InitialPage: NextPage = () => {
     void router.push("Login");
   }
 
-  return (
-    <Layout pageTitle="Login">
-      {status === "loading" && <div>Loading...</div>}
-    </Layout>
-  );
+  return <Layout pageTitle="Login" />;
 };
 
 export default InitialPage;
