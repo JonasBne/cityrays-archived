@@ -1,21 +1,26 @@
 import { type NextPage } from "next";
 
 import { Layout } from "@/components/Layout";
-import Login from "./Login";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/router";
 
-const Home: NextPage = () => {
+const InitialPage: NextPage = () => {
+  const router = useRouter();
+  const { status } = useSession();
+
+  if (status === "authenticated") {
+    void router.push("Home");
+  }
+
+  if (status === "unauthenticated") {
+    void router.push("Login");
+  }
+
   return (
-    <Layout pageTitle="Home">
-      <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16 ">
-        <h1 className="text-5xl font-extrabold tracking-tight text-white sm:text-[5rem]">
-          CityRays
-        </h1>
-        <div className="flex flex-col items-center gap-2">
-          <Login />
-        </div>
-      </div>
+    <Layout pageTitle="Login">
+      {status === "loading" && <div>Loading...</div>}
     </Layout>
   );
 };
 
-export default Home;
+export default InitialPage;
