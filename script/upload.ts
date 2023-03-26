@@ -8,8 +8,6 @@ import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
 
-// TODO: add support for multiple openingHours on a single day
-
 /**
  * types
  */
