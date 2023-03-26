@@ -34,7 +34,7 @@ export const Layout = ({ children, pageTitle }: IProps) => {
         <link rel="manifest" href="/site.webmanifest" />
       </Head>
       <Header />
-      <main>{children}</main>
+      <main className="p-4">{children}</main>
     </>
   );
 };
