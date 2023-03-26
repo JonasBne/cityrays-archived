@@ -25,8 +25,8 @@ model Outlet {
   location      Json @unique
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt String
+  updatedAt String
 }
 
 type OpeningHour {
@@ -34,6 +34,7 @@ type OpeningHour {
   weekday  String
   openAt   String?
   closesAt String?
+  closesAtNextDay Boolean? @default(false)
 }
 
 type SunlightHour {

@@ -6,6 +6,7 @@ import * as xlsx from "xlsx";
 import path from "node:path";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { v4 as uuidv4 } from "uuid";
+import { format } from "date-fns";
 
 // TODO: add support for multiple openingHours on a single day
 
@@ -151,6 +152,8 @@ function createOutletAddressInformationInput(sheet: xlsx.WorkSheet) {
   return {
     ...addressInformation,
     location,
+    createdAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
+    updatedAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
   } as Prisma.OutletCreateInput;
 }
 
@@ -201,11 +204,21 @@ function createOutletOpeningHoursInput(
         acc.push(openingHour);
       });
     } else {
+      const closesAtNextDay = () => {
+        const closesAt = openingHours()?.[1];
+
+        if (!closesAt || closesAt < "00:00") {
+          return false;
+        }
+        return true;
+      };
+
       const openingHour = {
         id: uuidv4(),
         weekday,
         openAt: openingHours()?.[0] || null,
         closesAt: openingHours()?.[1] || null,
+        closesAtNextDay: closesAtNextDay(),
       };
       // @ts-ignore
       acc.push(openingHour);
@@ -301,15 +314,32 @@ function createOutletSunlightHoursInput(
 }
 
 async function upsertOutlet(outletInput: Prisma.OutletCreateInput) {
-  const outlet = await prisma.outlet.upsert({
-    where: {
-      location: outletInput.location,
-    },
-    update: outletInput,
-    create: outletInput,
-  });
+  const outlets = await prisma.outlet.findMany();
 
-  return outlet;
+  const existingOutlet = outlets.find(
+    (outlet) =>
+      // @ts-ignore
+      outlet.location.coordinates[0] === outletInput.location.coordinates[0] &&
+      // @ts-ignore
+      outlet.location.coordinates[1] === outletInput.location.coordinates[1]
+  );
+
+  if (existingOutlet) {
+    // remove the createdAt field from the input
+    // for existing outlets
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { createdAt, ...input } = outletInput;
+
+    await prisma.outlet.update({
+      where: {
+        id: existingOutlet.id,
+      },
+      data: input,
+    });
+    return;
+  }
+
+  await prisma.outlet.create({ data: outletInput });
 }
 
 async function parseFile(filePath: string) {
@@ -325,6 +355,8 @@ async function parseFile(filePath: string) {
   let outletInput = createOutletAddressInformationInput(sheet);
   outletInput = createOutletOpeningHoursInput(sheet, outletInput);
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
+
+  console.log(outletInput);
 
   return await upsertOutlet(outletInput);
 }
