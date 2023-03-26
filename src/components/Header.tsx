@@ -10,10 +10,10 @@ export const Header = () => {
         {session ? (
           <>
             <span>{session.user.name}</span>
-            <button onClick={() => void signOut()}></button>
+            <button onClick={() => void signOut()}>Log out</button>
           </>
         ) : (
-          <button onClick={() => void signIn()}></button>
+          <button onClick={() => void signIn()}>Sign in</button>
         )}
       </div>
     </header>

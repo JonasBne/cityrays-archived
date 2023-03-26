@@ -34,9 +34,7 @@ export const Layout = ({ children, pageTitle }: IProps) => {
         <link rel="manifest" href="/site.webmanifest" />
       </Head>
       <Header />
-      <main className="flex min-h-screen flex-col items-center justify-center">
-        {children}
-      </main>
+      <main>{children}</main>
     </>
   );
 };
