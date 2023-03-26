@@ -25,6 +25,8 @@ model Outlet {
   location      Json @unique
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 type OpeningHour {
