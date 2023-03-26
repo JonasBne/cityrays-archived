@@ -354,8 +354,6 @@ async function parseFile(filePath: string) {
   outletInput = createOutletOpeningHoursInput(sheet, outletInput);
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  console.log(outletInput);
-
   return await upsertOutlet(outletInput);
 }
 
