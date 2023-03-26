@@ -1,7 +1,5 @@
 import { signIn, signOut, useSession } from "next-auth/react";
 
-const version = process.env.NEXT_PUBLIC_APP_VERSION;
-
 export const Header = () => {
   const { data: session } = useSession();
 
@@ -14,15 +12,16 @@ export const Header = () => {
 
   return (
     <header className="flex items-center justify-between p-4">
-      <h1 className="text-xl font-bold tracking-wider">CityRays</h1>
+      <h1 className="text-2xl font-bold tracking-wider text-teal-900">
+        CityRays
+      </h1>
       <div>
         <button
-          className="mr-2 rounded-md bg-slate-600 px-2 py-1 text-sm"
+          className="mr-2 rounded-md bg-teal-700 px-2 py-1 text-sm text-neutral-100"
           onClick={handleClick}
         >
           {session ? "Log out" : "Log in"}
         </button>
-        {version && <span className="text-sm font-light">{`v${version}`}</span>}
       </div>
     </header>
   );
