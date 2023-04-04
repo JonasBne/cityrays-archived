@@ -32,6 +32,9 @@ jobs:
       - name: "🔍 run tests"
         run: npm run test --if-present
 
+      - name: "✅ run build"
+        run: npm run build
+
   lint:
     name: Code standards
     runs-on: ubuntu-latest
