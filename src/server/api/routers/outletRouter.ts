@@ -2,6 +2,10 @@ import { format, isWithinInterval } from "date-fns";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { currentlyOpenQuery } from "../queries/outlet";
 
+// TODO: add
+// get outlet by id
+// get all outlets (also closed ones)
+
 const currentTime = format(new Date(), "HH:mm");
 const currentWeekday = format(new Date(), "EEEE");
 const currentDay = parseInt(format(new Date(), "dd"));
