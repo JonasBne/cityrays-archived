@@ -2,7 +2,7 @@
 
 ## Description
 
-This repository contains the code for the [CityRays app}(https://cityrays.vercel.app/). This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+This repository contains the code for the [CityRays app](https://cityrays.vercel.app/). This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
 
 ## Stack
 
@@ -39,6 +39,11 @@ These are the workflows:
 - `release & build development branch`:
 - `release & build test branch`:
 - `release & build master branch`:
+
+TODO: implement pipelines
+
+- https://github.blog/2022-02-02-build-ci-cd-pipeline-github-actions-four-steps/
+- https://vercel.com/guides/how-can-i-use-github-actions-with-vercel
 
 The builded versions are then pushed to Vercel for deployment.
 
