@@ -26,7 +26,7 @@ There are three environments that are deployed to their own specific domain:
 
 There are two databases hosted remote at MongoDB Atlas:
 
-- `cityrays-staging`: both teh development and staging environment connect to this database
+- `cityrays-staging`: both the development and staging environment connect to this database
 - `cityrays`: only the production environment connects to this database
 
 ## Deployment
@@ -39,11 +39,6 @@ These are the workflows:
 - `release & build development branch`:
 - `release & build test branch`:
 - `release & build master branch`:
-
-TODO: implement pipelines
-
-- https://github.blog/2022-02-02-build-ci-cd-pipeline-github-actions-four-steps/
-- https://vercel.com/guides/how-can-i-use-github-actions-with-vercel
 
 The builded versions are then pushed to Vercel for deployment.
 
