@@ -4,7 +4,7 @@
 
 This repository contains the code for the [CityRays app}(https://cityrays.vercel.app/). This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
 
-### Stack
+## Stack
 
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
@@ -13,6 +13,17 @@ This repository contains the code for the [CityRays app}(https://cityrays.vercel
 - [tRPC](https://trpc.io)
 - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 - [Vercel](https://vercel.com) (hosting)
+
+## Database
+
+There are two databases hosted remote at MongoDB Atlas:
+
+- `cityrays-staging`: both the development and test branch connect to this database
+- `cityrays`: only the master branch connects to this database
+
+## Deployment
+
+The CI/CD pipelines are set-up via Github Actions. The builded versions are then pushed to Vercel for deployment.
 
 ## Quick Start
 
