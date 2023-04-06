@@ -36,11 +36,37 @@ The CI/CD pipelines are set-up via Github Actions. The different workflows are a
 These are the workflows:
 
 - `development (pull requests)`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
-- `release & build development branch`:
-- `release & build test branch`:
-- `release & build master branch`:
+- `build & release development branch`: TO ADD
+- `build & release test branch`: TO ADD
+- `build & release master branch`: TO ADD
 
 The builded versions are then pushed to Vercel for deployment.
+
+## Conventions
+
+### Commits
+
+For `commits` we use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
+
+### Branching
+
+For `branch names` we use a simplified version:
+
+- `feature`: for adding, refactoring or removing a feature (e.g. feature/filter-bars)
+- `bugfix`: for fixing a bug (e.g. bugfix/more-shades)
+- `hotfix`: for fixing bugs (or making changes) to production (only for emergencies) (e.g. hotfix/increase-threshold)
+- `experimental`: any new feature or idea that is not part of a release or a sprint (e.g. experimental/dark-theme)
+- `release`: a branch for tagging a specific release version (e.g. release/cityrays-1.0.1)
+
+### Code flow branches
+
+The following branches are expected to be permanently available on the repository:
+
+- `development`: all new features and bug fixes are first brought to the development branch. Resolving code conflicts should be done as early as here. Developers test their code changes first on this branch.
+- `test`: this branch contains the features that will be tested by the stakeholder(s). Decisions are made here if a feature should be brought to the production code.
+- `master`: this is the production branch, if the repository is published, this is the default branch being presented.
+
+We expect a `one-way merge` starting from the temporary branch > development > test > master. Only hotfixes are an exception because they are merged directly into master and thereafter to test and development.
 
 ## Quick Start
 
