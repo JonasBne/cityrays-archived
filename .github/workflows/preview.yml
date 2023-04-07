@@ -15,6 +15,8 @@ jobs:
   Deploy-Preview:
     runs-on: ubuntu-latest
     steps:
+      - name: Log Github context
+        run: echo "$GITHUB_CONTEXT"
       - uses: actions/checkout@v2
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
