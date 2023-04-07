@@ -10,7 +10,7 @@ const Home: NextPage = () => {
 
   return (
     <Layout pageTitle="Home">
-      <>hello</>
+      <>hello DEV environment</>
     </Layout>
   );
 };
