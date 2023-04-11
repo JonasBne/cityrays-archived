@@ -33,6 +33,10 @@ There are two databases hosted remote at MongoDB Atlas:
 
 The CI/CD pipelines are set-up via Github Actions. The different workflows are added in the `.github` folder.
 
+Things to keep in mind:
+
+- Environment variables are loaded from the Vercel project settings
+
 These are the workflows:
 
 - `development (pull requests)`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
