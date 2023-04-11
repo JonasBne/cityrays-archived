@@ -4,6 +4,7 @@
 generator client {
   provider = "prisma-client-js"
   // https://stackoverflow.com/questions/74765804/deploy-nextjs-prisma-to-vercel-from-github-actions
+  // https://www.prisma.io/docs/concepts/components/prisma-schema/generators
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
