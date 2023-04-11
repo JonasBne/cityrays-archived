@@ -39,6 +39,7 @@ Things to keep in mind:
 
 These are the workflows:
 
+- `pull request`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
 - `preview`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened against the developmebt branch. It deploys the changes on `https://cityrays-jonasbne.vercel.app/`.
 - `deploy`: TO ADD
 
