@@ -25,8 +25,8 @@ There are two environments that are deployed to their own specific domain:
 
 There are two databases hosted remote at MongoDB Atlas:
 
-- `cityrays-staging`: only the development environment connects to this database
-- `cityrays`: only the production environment connects to this database
+- `cityrays-staging`: only the development environment connects to this database.
+- `cityrays`: only the production environment connects to this database.
 
 ## Deployment
 
@@ -34,14 +34,14 @@ The CI/CD pipelines are set-up via Github Actions. The different workflows are a
 
 Things to keep in mind:
 
-- The only secret that needs to be added to the project settings in Github is the `VERCEL_TOKEN`. All the other environment variables are pulled from the Vercel project settings based on that token
-- The `SKIP_ENV_VALIDATION` flag should be set to true, otherwise the build fails. If you want to test this locally, use the following command in the terminal `export SKIP_ENV_VALIDATION=true`
+- The only secret that needs to be added to the project settings in Github is the `VERCEL_TOKEN`. All the other environment variables are pulled from the Vercel project settings based on that token.
+- The `SKIP_ENV_VALIDATION` flag should be set to true, otherwise the build fails. If you want to test this locally, use the following command in the terminal `export SKIP_ENV_VALIDATION=true`.
 
 These are the workflows:
 
 - `pull request`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
 - `preview`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened against the developmebt branch. It deploys the changes on `https://cityrays-jonasbne.vercel.app/`.
-- `deploy`: TO ADD
+- `deployment`: it deploys the final production code to `https://cityrays.vercel.app/`.
 
 The builded versions are then pushed to Vercel for deployment.
 
@@ -55,11 +55,11 @@ For `commits` we use [conventional commits](https://www.conventionalcommits.org/
 
 For `branch names` we use a simplified version:
 
-- `feature`: for adding, refactoring or removing a feature (e.g. feature/filter-bars)
-- `bugfix`: for fixing a bug (e.g. bugfix/more-shades)
-- `hotfix`: for fixing bugs (or making changes) to production (only for emergencies) (e.g. hotfix/increase-threshold)
-- `experimental`: any new feature or idea that is not part of a release or a sprint (e.g. experimental/dark-theme)
-- `release`: a branch for tagging a specific release version (e.g. release/cityrays-1.0.1)
+- `feature`: for adding, refactoring or removing a feature (e.g. feature/filter-bars).
+- `bugfix`: for fixing a bug (e.g. bugfix/more-shades).
+- `hotfix`: for fixing bugs (or making changes) to production (only for emergencies) (e.g. hotfix/increase-threshold).
+- `experimental`: any new feature or idea that is not part of a release or a sprint (e.g. experimental/dark-theme).
+- `release`: a branch for tagging a specific release version (e.g. release/cityrays-1.0.1).
 
 ### Code flow branches
 
