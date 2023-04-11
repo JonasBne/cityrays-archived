@@ -16,29 +16,32 @@ This repository contains the code for the [CityRays app](https://cityrays.vercel
 
 ## Environments
 
-There are three environments that are deployed to their own specific domain:
+There are two environments that are deployed to their own specific domain:
 
-- `development`: connected to development branch and released to `development-cityrays.vercel.app`
-- `staging`: connected to test branch and released to `staging-cityrays.vercel.app`
-- `production`: connected to master branch and released to `cityrays.vercel.app`
+- `development`: connected to development branch and released to `https://cityrays-jonasbne.vercel.app/`
+- `production`: connected to master branch and released to `https://cityrays.vercel.app/`
 
 ## Database
 
 There are two databases hosted remote at MongoDB Atlas:
 
-- `cityrays-staging`: both the development and staging environment connect to this database
+- `cityrays-staging`: only the development environment connects to this database
 - `cityrays`: only the production environment connects to this database
 
 ## Deployment
 
 The CI/CD pipelines are set-up via Github Actions. The different workflows are added in the `.github` folder.
 
+Things to keep in mind:
+
+- The only secret that needs to be added to the project settings in Github is the `VERCEL_TOKEN`. All the other environment variables are pulled from the Vercel project settings based on that token
+- The `SKIP_ENV_VALIDATION` flag should be set to true, otherwise the build fails. If you want to test this locally, use the following command in the terminal `export SKIP_ENV_VALIDATION=true`
+
 These are the workflows:
 
-- `development (pull requests)`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
-- `build & release development branch`: TO ADD
-- `build & release test branch`: TO ADD
-- `build & release master branch`: TO ADD
+- `pull request`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened. These jobs include setting up Node, installing npm packages and dependencies, running tests and perform some linting jobs.
+- `preview`: this workflow runs whenever a pull request is opened, edited, synchronized or reopened against the developmebt branch. It deploys the changes on `https://cityrays-jonasbne.vercel.app/`.
+- `deploy`: TO ADD
 
 The builded versions are then pushed to Vercel for deployment.
 
@@ -62,11 +65,10 @@ For `branch names` we use a simplified version:
 
 The following branches are expected to be permanently available on the repository:
 
-- `development`: all new features and bug fixes are first brought to the development branch. Resolving code conflicts should be done as early as here. Developers test their code changes first on this branch.
-- `test`: this branch contains the features that will be tested by the stakeholder(s). Decisions are made here if a feature should be brought to the production code.
+- `development`: all new features and bug fixes are first brought to the development branch. Resolving code conflicts should be done as early as here. Developers test their code changes first on this branch. This branch contains the features that will be tested by the stakeholder(s). Decisions are made here if a feature should be brought to the production code.
 - `master`: this is the production branch, if the repository is published, this is the default branch being presented.
 
-We expect a `one-way merge` starting from the temporary branch > development > test > master. Only hotfixes are an exception because they are merged directly into master and thereafter to test and development.
+We expect a `one-way merge` starting from the temporary branch > development > master. Only hotfixes are an exception because they are merged directly into master and thereafter to development.
 
 ## Quick Start
 
