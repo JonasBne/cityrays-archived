@@ -1,16 +1,11 @@
 import { type NextPage } from "next";
 
 import { Layout } from "@/components/Layout";
-import { api } from "@/utils/api";
 
 const Home: NextPage = () => {
-  // const { data: outlets } = api.outlet.getAllSunny.useQuery();
-
-  // console.log(outlets);
-
   return (
     <Layout pageTitle="Home">
-      <>hello DEV environment</>
+      <>hello preview environment</>
     </Layout>
   );
 };
@@ -18,10 +13,16 @@ const Home: NextPage = () => {
 export default Home;
 
 export function getServerSideProps() {
-  console.log("env variables", {
-    nextAuthURL: process.env.NEXTAUTH_URL,
-    databaseURL: process.env.DATABASE_URL,
-  });
+  // log environment variables to enable debugging
+  if (
+    process.env.NODE_ENV === "development" ||
+    process.env.NODE_ENV === "test"
+  ) {
+    console.log("App loaded with the following environment variables", {
+      nextAuthURL: process.env.NEXTAUTH_URL,
+      databaseURL: process.env.DATABASE_URL,
+    });
+  }
   return {
     props: {}, // will be passed to the page component as props
   };
