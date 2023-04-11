@@ -4,9 +4,9 @@ import { Layout } from "@/components/Layout";
 import { api } from "@/utils/api";
 
 const Home: NextPage = () => {
-  const { data: outlets } = api.outlet.getAllSunny.useQuery();
+  // const { data: outlets } = api.outlet.getAllSunny.useQuery();
 
-  console.log(outlets);
+  // console.log(outlets);
 
   return (
     <Layout pageTitle="Home">
@@ -16,3 +16,13 @@ const Home: NextPage = () => {
 };
 
 export default Home;
+
+export function getServerSideProps() {
+  console.log("env variables", {
+    nextAuthURL: process.env.NEXTAUTH_URL,
+    databaseURL: process.env.DATABASE_URL,
+  });
+  return {
+    props: {}, // will be passed to the page component as props
+  };
+}
