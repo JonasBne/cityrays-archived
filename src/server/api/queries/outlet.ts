@@ -1,5 +1,3 @@
-import { type Outlet } from "@prisma/client";
-
 export const currentlyOpenQuery = (
   currentWeekday: string,
   currentTime: string
