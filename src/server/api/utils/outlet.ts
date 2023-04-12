@@ -1,28 +1,31 @@
 import { type Outlet } from "@prisma/client";
 import { format, isWithinInterval } from "date-fns";
 
-const currentTime = format(new Date(), "HH:mm");
-const currentDay = parseInt(format(new Date(), "dd"));
-const currentMonth = parseInt(format(new Date(), "MM"));
-const currentWeekday = format(new Date(), "EEEE");
-const currentYear = parseInt(format(new Date(), "yyyy"));
+// instead of calling the new Date() here we pass it in as a prop
+// so we can reliably test these utils functions based on a mocked date
 
-export const getAllOpen = (outlets: Outlet[]) => {
+export const getAllOpen = (outlets: Outlet[], date = new Date()) => {
+  const currentTime = format(date, "HH:mm");
+  const currentWeekday = format(date, "EEEE");
+
   const openOutlets = outlets.filter((outlet) => {
     const weekday = outlet.openingHours.find(
       (openingHour) =>
         openingHour.weekday.toLowerCase() === currentWeekday.toLowerCase()
     );
 
-    if (!weekday || !weekday?.closesAt) {
+    if (!weekday || !weekday.closesAt || !weekday.openAt) {
       return false;
     }
 
-    // an outlet is considered to be open if the current time is lower than the closing time
-    // or if the outlet closes on the next day then it's also considered open if the current time is greater than the closing time
+    // an outlet is considered to be open if:
+    // the current time is lower than the closing time
+    // the outlet closes on the next day and if the current time is greater than the closing time and if the opening time is lower than the current time
     if (
       weekday.closesAt > currentTime ||
-      (weekday.closesAtNextDay && weekday.closesAt < currentTime)
+      (weekday.closesAtNextDay &&
+        weekday.closesAt < currentTime &&
+        weekday.openAt <= currentTime)
     ) {
       return true;
     }
@@ -33,7 +36,12 @@ export const getAllOpen = (outlets: Outlet[]) => {
   return openOutlets;
 };
 
-export const getAllSunny = (outlets: Outlet[]) => {
+export const getAllSunny = (outlets: Outlet[], date = new Date()) => {
+  const currentTime = format(date, "HH:mm");
+  const currentDay = parseInt(format(date, "dd"));
+  const currentMonth = parseInt(format(date, "MM"));
+  const currentYear = parseInt(format(date, "yyyy"));
+
   const sunnyOutlets = outlets.filter((outlet) => {
     // first we need to find the sunlightHours object where the period includes
     // the current date
