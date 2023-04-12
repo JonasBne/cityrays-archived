@@ -37,6 +37,16 @@ const outletOpeningHoursProperties = {
 
 type TWeekdaysLabel = keyof typeof outletOpeningHoursProperties;
 
+const outletClosesNextDayProperties = {
+  monday: "B79",
+  tuesday: "B80",
+  wednesday: "B81",
+  thursday: "B82",
+  friday: "B83",
+  saturday: "B84",
+  sunday: "B85",
+} as const;
+
 interface TimestampPair {
   startTime: string;
   endTime: string;
@@ -159,9 +169,9 @@ function createOutletOpeningHoursInput(
   sheet: xlsx.WorkSheet,
   outlet: Prisma.OutletCreateInput
 ): Prisma.OutletCreateInput {
-  const entries = Object.entries(outletOpeningHoursProperties);
+  const openingHoursEntries = Object.entries(outletOpeningHoursProperties);
 
-  const openingHours = entries.reduce((acc, [key, value]) => {
+  const openingHours = openingHoursEntries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
     const cell = value;
     const cellValue = (sheet[cell]?.v || null) as string | null;
@@ -186,6 +196,9 @@ function createOutletOpeningHoursInput(
       return cellValue.split("-");
     };
 
+    const closesAtNextDay = (sheet[outletClosesNextDayProperties[weekday]]?.v ||
+      false) as boolean;
+
     // if the length is four then it contains multiple hours for a given day
     // and then we create two objects instead of one, but just loop over the initial array
     // which contains two elements, each representing a pair of open and closing times
@@ -197,26 +210,18 @@ function createOutletOpeningHoursInput(
           weekday,
           openAt: openingHoursPair[0] || null,
           closesAt: openingHoursPair[1] || null,
+          closesAtNextDay,
         };
         // @ts-ignore
         acc.push(openingHour);
       });
     } else {
-      const closesAtNextDay = () => {
-        const closesAt = openingHours()?.[1];
-
-        if (!closesAt || closesAt < "00:00") {
-          return false;
-        }
-        return true;
-      };
-
       const openingHour = {
         id: uuidv4(),
         weekday,
         openAt: openingHours()?.[0] || null,
         closesAt: openingHours()?.[1] || null,
-        closesAtNextDay: closesAtNextDay(),
+        closesAtNextDay,
       };
       // @ts-ignore
       acc.push(openingHour);
