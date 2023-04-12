@@ -1,5 +1,5 @@
 import { type Outlet } from "@prisma/client";
-import { format, isWithinInterval } from "date-fns";
+import { format, intervalToDuration, isWithinInterval } from "date-fns";
 
 // instead of calling the new Date() here we pass it in as a prop
 // so we can reliably test these utils functions based on a mocked date
@@ -84,4 +84,39 @@ export const getAllSunny = (outlets: Outlet[], date = new Date()) => {
   });
 
   return sunnyOutlets;
+};
+
+export const getRemainingOpenTime = (openOutlet: Outlet, date = new Date()) => {
+  const currentTime = format(date, "HH:mm");
+  const currentWeekday = format(date, "EEEE");
+
+  const { openingHours } = openOutlet;
+
+  const openingHoursCurrentWeekday = openingHours.find(
+    (openingHour) =>
+      openingHour.weekday.toLowerCase() === currentWeekday.toLowerCase()
+  );
+
+  if (!openingHoursCurrentWeekday || !openingHoursCurrentWeekday.openAt) {
+    return null;
+  }
+
+  // because we're working with strings we need to convert the timestamps (in HH:mm format) to Date objects
+  // the year, month and day are irrelevant for this calculation so we can use any date, we're only interested in the
+  // actual hours and minutes
+  const currentTimeDate = new Date(`2000-01-01T${currentTime}`);
+  const outletClosingTimeDate = openingHoursCurrentWeekday.closesAt
+    ? new Date(`2000-01-01T${openingHoursCurrentWeekday.closesAt}`)
+    : null;
+
+  if (!outletClosingTimeDate) {
+    return null;
+  }
+
+  const diff = intervalToDuration({
+    start: currentTimeDate,
+    end: outletClosingTimeDate,
+  });
+
+  return diff;
 };
