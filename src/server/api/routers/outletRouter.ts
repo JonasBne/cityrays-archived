@@ -1,14 +1,5 @@
-import { format } from "date-fns";
 import { createTRPCRouter, publicProcedure } from "../trpc";
-import { currentlyOpenQuery } from "../queries/outlet";
-import { getAllSunny } from "../utils/outlet";
-
-// TODO: add
-// get outlet by id
-// get all outlets (also closed ones)
-
-const currentTime = format(new Date(), "HH:mm");
-const currentWeekday = format(new Date(), "EEEE");
+import { getAllOpen, getAllSunny } from "../utils/outlet";
 
 export const outletRouter = createTRPCRouter({
   getAll: publicProcedure.query(async ({ ctx }) => {
@@ -20,19 +11,16 @@ export const outletRouter = createTRPCRouter({
   }),
   getAllOpen: publicProcedure.query(async ({ ctx }) => {
     try {
-      const openOutlets = await ctx.prisma.outlet.findMany(
-        currentlyOpenQuery(currentWeekday, currentTime)
-      );
-      return openOutlets;
+      const outlets = await ctx.prisma.outlet.findMany();
+      return getAllOpen(outlets);
     } catch (error) {
       console.log("error", error);
     }
   }),
   getAllSunny: publicProcedure.query(async ({ ctx }) => {
     try {
-      const openOutlets = await ctx.prisma.outlet.findMany(
-        currentlyOpenQuery(currentWeekday, currentTime)
-      );
+      const outlets = await ctx.prisma.outlet.findMany();
+      const openOutlets = getAllOpen(outlets);
       return getAllSunny(openOutlets);
     } catch (error) {
       console.log("error", error);

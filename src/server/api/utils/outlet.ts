@@ -4,7 +4,34 @@ import { format, isWithinInterval } from "date-fns";
 const currentTime = format(new Date(), "HH:mm");
 const currentDay = parseInt(format(new Date(), "dd"));
 const currentMonth = parseInt(format(new Date(), "MM"));
+const currentWeekday = format(new Date(), "EEEE");
 const currentYear = parseInt(format(new Date(), "yyyy"));
+
+export const getAllOpen = (outlets: Outlet[]) => {
+  const openOutlets = outlets.filter((outlet) => {
+    const weekday = outlet.openingHours.find(
+      (openingHour) =>
+        openingHour.weekday.toLowerCase() === currentWeekday.toLowerCase()
+    );
+
+    if (!weekday || !weekday?.closesAt) {
+      return false;
+    }
+
+    // an outlet is considered to be open if the current time is lower than the closing time
+    // or if the outlet closes on the next day then it's also considered open if the current time is greater than the closing time
+    if (
+      weekday.closesAt > currentTime ||
+      (weekday.closesAtNextDay && weekday.closesAt < currentTime)
+    ) {
+      return true;
+    }
+
+    return false;
+  });
+
+  return openOutlets;
+};
 
 export const getAllSunny = (outlets: Outlet[]) => {
   const sunnyOutlets = outlets.filter((outlet) => {
