@@ -1,7 +1,6 @@
 import { getAllOpen } from "../outlet";
 import { type Outlet } from "@prisma/client";
 
-describe("outlet utils", () => {
   describe("getAllOpen", () => {
     it("returns no outlets if the current time < opening time", () => {
       // mock the current date as a wednesday at 9am
@@ -164,4 +163,4 @@ describe("outlet utils", () => {
     const openOutlets = getAllOpen(mockOutlets, date);
     expect(openOutlets).toHaveLength(1);
   });
-});
+
