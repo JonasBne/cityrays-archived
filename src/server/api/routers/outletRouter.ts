@@ -1,7 +1,15 @@
+import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 import { getAllOpen, getAllSunny } from "../utils/outlet";
 
 export const outletRouter = createTRPCRouter({
+  getById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(({ ctx, input }) => {
+      return ctx.prisma.outlet.findUnique({
+        where: { id: input.id },
+      });
+    }),
   getAll: publicProcedure.query(async ({ ctx }) => {
     try {
       return await ctx.prisma.outlet.findMany();

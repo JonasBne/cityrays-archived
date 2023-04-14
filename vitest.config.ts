@@ -26,4 +26,7 @@ export default defineConfig(() => {
   };
 });
 
+// skip validation during testing
+// otherwise vitest will think the code runs in the client and throws errors
+// that the client tries to access server side environment variables
 process.env.SKIP_ENV_VALIDATION = "true";
