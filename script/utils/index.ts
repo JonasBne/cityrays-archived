@@ -170,9 +170,10 @@ export const createOutletAddressInformationInput = (
 
 export const createOutletOpeningHoursInput = (
   sheet: xlsx.WorkSheet,
-  outlet: Prisma.OutletCreateInput
+  outlet: Prisma.OutletCreateInput,
+  excelRowsAndCols: typeof outletOpeningHoursProperties
 ): Prisma.OutletCreateInput => {
-  const openingHoursEntries = Object.entries(outletOpeningHoursProperties);
+  const openingHoursEntries = Object.entries(excelRowsAndCols);
 
   const openingHours = openingHoursEntries.reduce((acc, [key, value]) => {
     const weekday = key as TWeekdaysLabel;
@@ -364,8 +365,13 @@ export const parseFile = async (filePath: string) => {
     sheet,
     outletAddressProperties
   );
-  outletInput = createOutletOpeningHoursInput(sheet, outletInput);
+  outletInput = createOutletOpeningHoursInput(
+    sheet,
+    outletInput,
+    outletOpeningHoursProperties
+  );
+  console.log("res", outletInput);
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  return await upsertOutlet(outletInput);
+  // return await upsertOutlet(outletInput);
 };
