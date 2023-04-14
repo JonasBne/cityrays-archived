@@ -21,7 +21,7 @@ import { getServerAuthSession } from "@/server/auth";
 import { prisma } from "@/server/db";
 
 type CreateContextOptions = {
-  session: Session | null;
+  session?: Session | null;
   prisma?: PrismaClient;
 };
 
