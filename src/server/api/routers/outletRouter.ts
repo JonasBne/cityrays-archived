@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "../trpc";
+import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
 import { getAllOpen, getAllSunny } from "../utils/outlet";
 
 export const outletRouter = createTRPCRouter({
@@ -33,5 +33,12 @@ export const outletRouter = createTRPCRouter({
     } catch (error) {
       console.log("error", error);
     }
+  }),
+  // this is an example of protected procedure that needs
+  // an authenticated user to access
+  getSecretMessage: protectedProcedure.query(() => {
+    return {
+      message: "you can now see the secret message",
+    };
   }),
 });
