@@ -370,8 +370,8 @@ export const parseFile = async (filePath: string) => {
     outletInput,
     outletOpeningHoursProperties
   );
-  console.log("res", outletInput);
+
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  // return await upsertOutlet(outletInput);
+  return await upsertOutlet(outletInput);
 };
