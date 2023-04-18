@@ -45,7 +45,7 @@ export const useClients = () => {
           },
         }),
         httpBatchLink({
-          url: `http://localhost:3001/api/trpc`,
+          url: `http://localhost:3000/api/trpc`,
           fetch(url, opts) {
             return rawFetch(url, opts);
           },
