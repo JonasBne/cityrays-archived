@@ -1,14 +1,12 @@
-import { toTRPCResult } from "@/tests/json-utils";
-import { server } from "@/tests/mockServer";
+import { server, trpc } from "@/tests/mockServer";
 import { render, screen, waitFor } from "@/tests/render";
-import { rest } from "msw";
 import Home from "../index";
 
 describe("Home page", () => {
   it("renders a loading state while data is being loaded", async () => {
     server.use(
-      rest.get("*/trpc/outlet.getAll", (_req, res, ctx) => {
-        return res(ctx.status(200), ctx.json(toTRPCResult([])));
+      trpc.outlet.getAll.query((_req, res, ctx) => {
+        return res(ctx.data([]));
       })
     );
 
@@ -26,15 +24,12 @@ describe("Home page", () => {
 
   it("renders a list of outlets", async () => {
     server.use(
-      rest.get("*/trpc/outlet.getAll", (_req, res, ctx) => {
+      trpc.outlet.getAll.query((_req, res, ctx) => {
         return res(
-          ctx.status(200),
-          ctx.json(
-            toTRPCResult([
-              { id: "1", name: "outlet 1" },
-              { id: "2", name: "outlet 2" },
-            ])
-          )
+          ctx.data([
+            { id: "1", name: "outlet 1" },
+            { id: "2", name: "outlet 2" },
+          ])
         );
       })
     );
