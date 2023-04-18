@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createTRPCReact, httpBatchLink, loggerLink } from "@trpc/react-query";
@@ -32,7 +33,6 @@ export const useClients = () => {
   );
 
   // just a hack to get around specific typing
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
   const rawFetch = (url: any, opts: any) => fetch(url, { ...opts });
 
   const [trpcClient] = useState(() =>
