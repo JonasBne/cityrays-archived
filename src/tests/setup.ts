@@ -1,13 +1,13 @@
-import { afterAll, afterEach, beforeAll, expect } from 'vitest';
-import matchers from '@testing-library/jest-dom/matchers';
-import { server } from './msw';
-import { cleanup } from './test-utils';
+import { afterAll, afterEach, beforeAll, expect } from "vitest";
+import matchers from "@testing-library/jest-dom/matchers";
+import { server } from "./mockServer";
+import { cleanup } from "./render";
 
 expect.extend(matchers);
 
 beforeAll(() => {
   server.listen({
-    onUnhandledRequest: 'error',
+    onUnhandledRequest: "error",
   });
 });
 
