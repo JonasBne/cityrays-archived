@@ -212,8 +212,8 @@ export const createOutletOpeningHoursInput = (
         const openingHour = {
           id: uuidv4(),
           weekday,
-          openAt: openingHoursPair[0] || null,
-          closesAt: openingHoursPair[1] || null,
+          openAt: openingHoursPair[0]?.trim() || null,
+          closesAt: openingHoursPair[1]?.trim() || null,
           closesAtNextDay,
         };
         // @ts-ignore
@@ -223,8 +223,8 @@ export const createOutletOpeningHoursInput = (
       const openingHour = {
         id: uuidv4(),
         weekday,
-        openAt: openingHours()?.[0] || null,
-        closesAt: openingHours()?.[1] || null,
+        openAt: (openingHours()?.[0] as string)?.trim() || null,
+        closesAt: (openingHours()?.[1] as string)?.trim() || null,
         closesAtNextDay,
       };
       // @ts-ignore
@@ -373,5 +373,7 @@ export const parseFile = async (filePath: string) => {
 
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  return await upsertOutlet(outletInput);
+  console.log(outletInput);
+
+  // return await upsertOutlet(outletInput);
 };
