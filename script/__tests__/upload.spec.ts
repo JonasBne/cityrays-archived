@@ -127,14 +127,14 @@ describe("upload script", () => {
     ).toMatchObject({
       startTime: "7:00",
       endTime: "7:15",
-      sunShine: 0,
+      sunshine: 0,
     });
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours[11]
     ).toMatchObject({
       startTime: "9:45",
       endTime: "10:00",
-      sunShine: 1,
+      sunshine: 1,
     });
   });
 });

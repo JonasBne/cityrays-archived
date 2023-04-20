@@ -77,7 +77,7 @@ export const getAllSunny = (outlets: Outlet[], date = new Date()) => {
         (outletSunlightHours) =>
           currentTime >= outletSunlightHours.startTime &&
           currentTime <= outletSunlightHours.endTime
-      )?.sunShine ?? 0;
+      )?.sunshine ?? 0;
 
     // return the outlet if it has sunshine
     return sunshineForCurrentTime > 0 ? true : false;

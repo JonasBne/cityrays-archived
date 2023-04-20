@@ -294,7 +294,7 @@ export const createOutletSunlightHoursInput = (
               id: uuidv4(),
               startTime: currentTimestampPair.startTime,
               endTime: currentTimestampPair.endTime,
-              sunShine: value,
+              sunshine: value,
             };
           }
         }

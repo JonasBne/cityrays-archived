@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // https://stackoverflow.com/questions/74765804/deploy-nextjs-prisma-to-vercel-from-github-actions
   // https://www.prisma.io/docs/concepts/components/prisma-schema/generators
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
@@ -25,18 +25,18 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  location      Json @unique
+  location      Json           @unique
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
-  createdAt String
-  updatedAt String
+  createdAt     String
+  updatedAt     String
 }
 
 type OpeningHour {
-  id       String
-  weekday  String
-  openAt   String?
-  closesAt String?
+  id              String
+  weekday         String
+  openAt          String?
+  closesAt        String?
   closesAtNextDay Boolean? @default(false)
 }
 
@@ -51,14 +51,14 @@ type OutletSunlightHour {
   id        String
   startTime String
   endTime   String
-  sunShine  Int
+  sunshine  Int
 }
 
 // next auth models
 
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String
+  userId            String  @db.ObjectId
   type              String
   provider          String
   providerAccountId String
@@ -69,16 +69,19 @@ model Account {
   scope             String?
   id_token          String? @db.String
   session_state     String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
+
 model Session {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
@@ -88,9 +91,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 }
+
 model VerificationToken {
   identifier String   @id @default(auto()) @map("_id") @db.ObjectId
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }
