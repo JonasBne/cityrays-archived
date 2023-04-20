@@ -14,6 +14,14 @@ This repository contains the code for the [CityRays app](https://cityrays.vercel
 - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
 - [Vercel](https://vercel.com) (hosting)
 
+## Documentation
+
+Before starting, read the quickstart documentation:
+
+- [Prisma](./docs/PRISMA.md)
+- [tRPC](./docs/TRPC.md)
+- [t3](./docs/T3-STACK.md)
+
 ## Environments
 
 There are two environments that are deployed to their own specific domain:
