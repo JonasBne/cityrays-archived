@@ -52,8 +52,8 @@ type SunlightHour {
   // store full period as one string to debug, e.g. 01/01 - 07/01
   period              String
   // store begin and end date as day number, e.g. 1 - 7
-  start           Int
-  end             Int
+  start               Int
+  end                 Int
   outletSunlightHours OutletSunlightHour[]
 }
 

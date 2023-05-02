@@ -133,7 +133,6 @@ const prisma = new PrismaClient();
  * helper functions
  */
 
-// TODO: Add unit test
 export const getSecondsSinceMidgnight = (time: string) => {
   const [hours, minutes] = time.split(":");
   const hoursInSeconds = Number(hours) * 60 * 60;
@@ -211,6 +210,8 @@ export const createOutletOpeningHoursInput = (
       return cellValue.split("-");
     };
 
+    // returns an array of arrays, e.g. [['09:00', '12:00'], ['13:00', '18:00']] in case of multiple openingHours
+    // or [['09:00', '12:00']] in case of a single openingHours
     const openingHours = getOpeningHours();
 
     // if the length is four then it contains multiple hours for a given day, e.g. ['09:00', '12:00', '13:00', '18:00']
@@ -221,21 +222,15 @@ export const createOutletOpeningHoursInput = (
 
     if (hasMultipleOpeningHours) {
       openingHours.forEach((openingHoursPair) => {
-        const openingHoursBeforeFirstClosingTime = openingHoursPair[0];
-        const openingHoursAFterFirstClosingTime = openingHoursPair[1];
-
-        console.log(
-          "openingHoursBeforeFirstClosingTime",
-          openingHoursBeforeFirstClosingTime
-        );
+        const openingHours =
+          openingHoursPair[0] && openingHoursPair[1]
+            ? `${openingHoursPair[0]}-${openingHoursPair[1]}`
+            : null;
 
         const openingHour = {
           id: uuidv4(),
           weekday,
-          openingHours:
-            openingHoursPair[0] && openingHoursPair[1]
-              ? [openingHoursPair[0]?.trim(), openingHoursPair[1]?.trim()]
-              : null,
+          openingHours,
           openAt: openingHoursPair[0]
             ? getSecondsSinceMidgnight(openingHoursPair[0])
             : null,
@@ -244,6 +239,7 @@ export const createOutletOpeningHoursInput = (
             : null,
           closesAtNextDay,
         };
+        console.log("openingshour", openingHour);
         // @ts-ignore
         acc.push(openingHour);
       });
@@ -412,7 +408,7 @@ export const parseFile = async (filePath: string) => {
 
   // outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  console.log(outletInput);
+  // console.log(outletInput);
 
   // return await upsertOutlet(outletInput);
 };
