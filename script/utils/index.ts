@@ -5,8 +5,8 @@
 
 import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
-import { v4 as uuidv4 } from "uuid";
 import { format } from "date-fns";
+import ObjectID from "bson-objectid";
 
 /**
  * types
@@ -228,7 +228,7 @@ export const createOutletOpeningHoursInput = (
             : null;
 
         const openingHour = {
-          id: uuidv4(),
+          id: ObjectID(),
           weekday,
           openingHours,
           openAt: openingHoursPair[0]
@@ -245,7 +245,7 @@ export const createOutletOpeningHoursInput = (
       });
     } else {
       const openingHour = {
-        id: uuidv4(),
+        id: ObjectID(),
         weekday,
         openingHours:
           getOpeningHours()?.[0] && getOpeningHours()?.[1]
@@ -342,7 +342,7 @@ export const createOutletSunlightHoursInput = (
       );
 
     const input: Prisma.SunlightHourCreateInput = {
-      id: uuidv4(),
+      id: ObjectID(),
       startDate,
       endDate,
       outletSunlightHours,
