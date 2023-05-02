@@ -133,6 +133,15 @@ const prisma = new PrismaClient();
  * helper functions
  */
 
+// TODO: Add unit test
+export const getSecondsSinceMidgnight = (time: string) => {
+  const [hours, minutes] = time.split(":");
+  const hoursInSeconds = Number(hours) * 60 * 60;
+  const minutesInSeconds = Number(minutes) * 60;
+
+  return hoursInSeconds + minutesInSeconds;
+};
+
 export const createOutletAddressInformationInput = (
   sheet: xlsx.WorkSheet,
   excelRowsAndCols: typeof outletAddressProperties
@@ -179,8 +188,10 @@ export const createOutletOpeningHoursInput = (
     const weekday = key as TWeekdaysLabel;
     const cell = value;
     const cellValue = (sheet[cell]?.v || null) as string | null;
+    const closesAtNextDay = (sheet[outletClosesNextDayProperties[weekday]]?.v ||
+      false) as boolean;
 
-    const openingHours = () => {
+    const getOpeningHours = () => {
       if (!cellValue) {
         return null;
       }
@@ -200,20 +211,37 @@ export const createOutletOpeningHoursInput = (
       return cellValue.split("-");
     };
 
-    const closesAtNextDay = (sheet[outletClosesNextDayProperties[weekday]]?.v ||
-      false) as boolean;
+    const openingHours = getOpeningHours();
 
-    // if the length is four then it contains multiple hours for a given day
+    // if the length is four then it contains multiple hours for a given day, e.g. ['09:00', '12:00', '13:00', '18:00']
     // and then we create two objects instead of one, but just loop over the initial array
     // which contains two elements, each representing a pair of open and closing times
     // for that day
-    if (openingHours()?.flat().length === 4) {
-      openingHours()?.forEach((openingHoursPair) => {
+    const hasMultipleOpeningHours = openingHours?.flat().length === 4;
+
+    if (hasMultipleOpeningHours) {
+      openingHours.forEach((openingHoursPair) => {
+        const openingHoursBeforeFirstClosingTime = openingHoursPair[0];
+        const openingHoursAFterFirstClosingTime = openingHoursPair[1];
+
+        console.log(
+          "openingHoursBeforeFirstClosingTime",
+          openingHoursBeforeFirstClosingTime
+        );
+
         const openingHour = {
           id: uuidv4(),
           weekday,
-          openAt: openingHoursPair[0]?.trim() || null,
-          closesAt: openingHoursPair[1]?.trim() || null,
+          openingHours:
+            openingHoursPair[0] && openingHoursPair[1]
+              ? [openingHoursPair[0]?.trim(), openingHoursPair[1]?.trim()]
+              : null,
+          openAt: openingHoursPair[0]
+            ? getSecondsSinceMidgnight(openingHoursPair[0])
+            : null,
+          closesAt: openingHoursPair[1]
+            ? getSecondsSinceMidgnight(openingHoursPair[1])
+            : null,
           closesAtNextDay,
         };
         // @ts-ignore
@@ -223,8 +251,19 @@ export const createOutletOpeningHoursInput = (
       const openingHour = {
         id: uuidv4(),
         weekday,
-        openAt: (openingHours()?.[0] as string)?.trim() || null,
-        closesAt: (openingHours()?.[1] as string)?.trim() || null,
+        openingHours:
+          getOpeningHours()?.[0] && getOpeningHours()?.[1]
+            ? [
+                (getOpeningHours()?.[0] as string)?.trim(),
+                (getOpeningHours()?.[1] as string)?.trim(),
+              ]
+            : null,
+        openAt: getOpeningHours()?.[0]
+          ? getSecondsSinceMidgnight(getOpeningHours()?.[0] as string)
+          : null,
+        closesAt: getOpeningHours()?.[0]
+          ? getSecondsSinceMidgnight(getOpeningHours()?.[1] as string)
+          : null,
         closesAtNextDay,
       };
       // @ts-ignore
@@ -371,7 +410,7 @@ export const parseFile = async (filePath: string) => {
     outletOpeningHoursProperties
   );
 
-  outletInput = createOutletSunlightHoursInput(sheet, outletInput);
+  // outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
   console.log(outletInput);
 

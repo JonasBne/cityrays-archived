@@ -52,8 +52,8 @@ type SunlightHour {
   // store full period as one string to debug, e.g. 01/01 - 07/01
   period              String
   // store begin and end date as day number, e.g. 1 - 7
-  startDate           Int
-  endDate             Int
+  start           Int
+  end             Int
   outletSunlightHours OutletSunlightHour[]
 }
 
@@ -62,7 +62,7 @@ type OutletSunlightHour {
   // store begin and end time as a full string to debug, e.g. 10:00 - 18:00
   hours    String
   // store begin and end time as seconds elapsed since midnight, e.g. 36000 - 64800
-  begin    Int
+  start    Int
   end      Int
   sunshine Int
 }
