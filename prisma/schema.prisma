@@ -8,6 +8,10 @@ generator client {
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
 }
 
+generator erd {
+    provider = "prisma-erd-generator"
+}
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
@@ -25,13 +29,14 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  location      Json           @unique
+  latitude      Int
+  longitude     Int
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
   createdAt     String
   updatedAt     String
 
-  @@unique([street, houseNumber, city, zipCode])
+  @@unique([latitude, longitude])
 }
 
 model OpeningHour {
