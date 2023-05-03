@@ -32,7 +32,7 @@ model Outlet {
   latitude      Int
   longitude     Int
   openingHours  OpeningHour[]
-  sunlightHours SunlightHour[]
+  outletSunlightHours OutletSunlightHour[]
   createdAt     String
   updatedAt     String
 
@@ -44,7 +44,7 @@ model OpeningHour {
   weekday         String
   // store open and closing time as one string to debug, e.g. 10:00 - 18:00
   openingHours    String?
-  // store as seconds elapsed since midgnight to make it easier to make queries
+  // store as seconds elapsed since midnight to make it easier to make queries
   openAt          Int?
   closesAt        Int?
   closesAtNextDay Boolean? @default(false)
@@ -52,20 +52,6 @@ model OpeningHour {
   outletId        String   @map("outlet_id") @db.ObjectId
 
   @@unique([outletId, weekday])
-  @@index([outletId])
-}
-
-model SunlightHour {
-  id                  String               @id @default(auto()) @map("_id") @db.ObjectId
-  // store full period as one string to debug, e.g. 01/01 - 07/01
-  period              String
-  // store begin and end date as day number, e.g. 1 - 7
-  start               Int
-  end                 Int
-  outletSunlightHours OutletSunlightHour[]
-  outlet              Outlet               @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  outletId            String               @map("outlet_id") @db.ObjectId
-
   @@index([outletId])
 }
 
@@ -77,9 +63,27 @@ model OutletSunlightHour {
   start          Int
   end            Int
   sunshine       Int
+  outlet         Outlet      @relation(fields: [outletId], references: [id], onDelete: Cascade)
+  outletId       String      @map("outlet_id") @db.ObjectId
   sunlightHour   SunlightHour @relation(fields: [sunlightHourId], references: [id], onDelete: Cascade)
   sunlightHourId String       @map("sunlight_hour_id") @db.ObjectId
+
+  @@unique([outletId, sunlightHourId])
+  @@index([sunlightHourId])
 }
+
+model SunlightHour {
+  id       String              @id @default(auto()) @map("_id") @db.ObjectId
+  // store full period as one string to debug, e.g. 01/01 - 07/01
+  period   String
+  // store begin and end date as day number, e.g. 1 - 7
+  start    Int
+  end      Int
+  outlets  OutletSunlightHour[]
+  createdAt String
+  updatedAt String
+}
+
 
 // next auth models
 

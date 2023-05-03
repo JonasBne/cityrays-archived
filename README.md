@@ -59,7 +59,7 @@ The builded versions are then pushed to Vercel for deployment.
 
 For `commits` we use [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/).
 
-To ensure that the correct convention is used, we use [commitlint](https://github.com/conventional-changelog/commitlint) in combinatie with [husky](https://github.com/typicode/husky).
+To ensure that the correct convention is used, we use [commitlint](https://github.com/conventional-changelog/commitlint) in combination with [husky](https://github.com/typicode/husky).
 
 ### Branching
 
