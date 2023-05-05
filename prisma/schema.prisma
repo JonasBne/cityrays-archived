@@ -40,21 +40,17 @@ model Outlet {
 }
 
 type OpeningHour {
-  id              String   @map("_id") @db.ObjectId
+  id              String   @db.ObjectId
   weekday         String
-  // store open and closing time as one string to debug, e.g. 10:00 - 18:00
   openingHours    String?
-  // store as seconds elapsed since midnight to make it easier to make queries
   openAt          Int?
   closesAt        Int?
   closesAtNextDay Boolean? @default(false)
 }
 
 type SunlightHour {
-  id                 String               @map("_id") @db.ObjectId
-  // store full period as one string to debug, e.g. 01/01 - 07/01
+  id                 String               @db.ObjectId
   period             String
-  // store begin and end date as day number, e.g. 1 - 7
   start              Int
   end                Int
   createdAt          String
@@ -63,10 +59,8 @@ type SunlightHour {
 }
 
 type OutletSunlightHour {
-  id       String @map("_id") @db.ObjectId
-  // store begin and end time as a full string to debug, e.g. 10:00 - 18:00
+  id       String @db.ObjectId
   hours    String
-  // store begin and end time as seconds elapsed since midnight, e.g. 36000 - 64800
   start    Int
   end      Int
   sunshine Int

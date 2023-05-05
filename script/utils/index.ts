@@ -59,7 +59,7 @@ interface TimestampPair {
 const startRow = 2;
 const endRow = 54;
 
-const calcSunlightHoursColumns = (
+const getSunlightHourColumns = (
   startColumn: string,
   numberOfColumns: number
 ) => {
@@ -75,7 +75,7 @@ const calcSunlightHoursColumns = (
   return columns;
 };
 
-const sunlightHoursDataColumns = calcSunlightHoursColumns("C", 62);
+const sunlightHoursDataColumns = getSunlightHourColumns("C", 62);
 
 /**
  * prisma client
@@ -117,14 +117,10 @@ export const createOutletAddressInformationInput = (
     {} as Record<TAddressLabel, string | number | undefined>
   );
 
-  const location = {
-    type: "MultiPoint",
-    coordinates: [longitude, latitude],
-  };
-
   return {
     ...addressInformation,
-    location,
+    latitude,
+    longitude,
     createdAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
     updatedAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
   } as Prisma.OutletCreateInput;
@@ -182,7 +178,7 @@ export const createOutletOpeningHoursInput = (
             : null;
 
         const openingHour = {
-          id: ObjectID(),
+          id: new ObjectID(),
           weekday,
           openingHours,
           openAt: openingHoursPair[0]
@@ -193,27 +189,23 @@ export const createOutletOpeningHoursInput = (
             : null,
           closesAtNextDay,
         };
-        console.log("openingshour", openingHour);
         // @ts-ignore
         acc.push(openingHour);
       });
     } else {
+      // we now for certain that's is just a single openingHours pair
+      // and hence can assert it's type
+      const openingHours = getOpeningHours() as Array<string> | null;
+      // remove all whitespace
+      const openAt = openingHours?.[0]?.replace(/\s/g, "") || null;
+      const closesAt = openingHours?.[1]?.replace(/\s/g, "") || null;
+
       const openingHour = {
-        id: ObjectID(),
+        id: new ObjectID(),
         weekday,
-        openingHours:
-          getOpeningHours()?.[0] && getOpeningHours()?.[1]
-            ? [
-                (getOpeningHours()?.[0] as string)?.trim(),
-                (getOpeningHours()?.[1] as string)?.trim(),
-              ]
-            : null,
-        openAt: getOpeningHours()?.[0]
-          ? getSecondsSinceMidgnight(getOpeningHours()?.[0] as string)
-          : null,
-        closesAt: getOpeningHours()?.[0]
-          ? getSecondsSinceMidgnight(getOpeningHours()?.[1] as string)
-          : null,
+        openingHours: openAt && closesAt ? `${openAt}-${closesAt}` : null,
+        openAt: openAt || null,
+        closesAt: closesAt || null,
         closesAtNextDay,
       };
       // @ts-ignore
@@ -280,7 +272,7 @@ export const createOutletSunlightHoursInput = (
           // the first column has index 0 and that corresponds to index 0 in the timestampPairs array
           if (currentTimestampPair) {
             return {
-              id: uuidv4(),
+              id: new ObjectID(),
               startTime: currentTimestampPair.startTime,
               endTime: currentTimestampPair.endTime,
               sunshine: value,
@@ -296,7 +288,7 @@ export const createOutletSunlightHoursInput = (
       );
 
     const input: Prisma.SunlightHourCreateInput = {
-      id: ObjectID(),
+      id: new ObjectID(),
       startDate,
       endDate,
       outletSunlightHours,
@@ -360,6 +352,7 @@ export const parseFile = async (filePath: string) => {
     outletOpeningHoursProperties
   );
 
+  console.log("input", outletInput);
   // outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
   // console.log(outletInput);
