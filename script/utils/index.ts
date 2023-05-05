@@ -5,8 +5,9 @@
 
 import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
-import { format } from "date-fns";
+import { format, getDay, getDayOfYear, parse, parseISO } from "date-fns";
 import ObjectID from "bson-objectid";
+import { get } from "node:http";
 
 /**
  * types
@@ -178,7 +179,7 @@ export const createOutletOpeningHoursInput = (
             : null;
 
         const openingHour = {
-          id: new ObjectID(),
+          id: ObjectID().toHexString(),
           weekday,
           openingHours,
           openAt: openingHoursPair[0]
@@ -201,7 +202,7 @@ export const createOutletOpeningHoursInput = (
       const closesAt = openingHours?.[1]?.replace(/\s/g, "") || null;
 
       const openingHour = {
-        id: new ObjectID(),
+        id: ObjectID().toHexString(),
         weekday,
         openingHours: openAt && closesAt ? `${openAt}-${closesAt}` : null,
         openAt: openAt || null,
@@ -254,9 +255,17 @@ export const createOutletSunlightHoursInput = (
 
   for (let i = startRow; i < endRow; i++) {
     // for each row determine the start and end period based on the year period columns
-
     const startDate = sheet[`A${i}`]?.w as string;
     const endDate = sheet[`B${i}`]?.w as string;
+    const period = `${startDate} - ${endDate}`;
+
+    // get number of day in the year (1-365)
+    const startDateWeekdayNumber = getDayOfYear(
+      parse(startDate, "dd/MM/yyyy", new Date())
+    );
+    const endDateWeekdayNumber = getDayOfYear(
+      parse(endDate, "dd/MM/yyyy", new Date())
+    );
 
     const outletSunlightHours = sunlightHoursDataColumns
       .map(
@@ -272,7 +281,7 @@ export const createOutletSunlightHoursInput = (
           // the first column has index 0 and that corresponds to index 0 in the timestampPairs array
           if (currentTimestampPair) {
             return {
-              id: new ObjectID(),
+              id: ObjectID().toHexString(),
               startTime: currentTimestampPair.startTime,
               endTime: currentTimestampPair.endTime,
               sunshine: value,
@@ -288,9 +297,10 @@ export const createOutletSunlightHoursInput = (
       );
 
     const input: Prisma.SunlightHourCreateInput = {
-      id: new ObjectID(),
-      startDate,
-      endDate,
+      id: ObjectID().toHexString(),
+      period,
+      start: startDateWeekdayNumber,
+      end: endDateWeekdayNumber
       outletSunlightHours,
     };
 
@@ -352,8 +362,7 @@ export const parseFile = async (filePath: string) => {
     outletOpeningHoursProperties
   );
 
-  console.log("input", outletInput);
-  // outletInput = createOutletSunlightHoursInput(sheet, outletInput);
+  outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
   // console.log(outletInput);
 
