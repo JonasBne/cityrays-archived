@@ -39,8 +39,8 @@ model Outlet {
   @@unique([latitude, longitude])
 }
 
-model OpeningHour {
-  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+type OpeningHour {
+  id              String   @map("_id") @db.ObjectId
   weekday         String
   // store open and closing time as one string to debug, e.g. 10:00 - 18:00
   openingHours    String?
@@ -48,15 +48,10 @@ model OpeningHour {
   openAt          Int?
   closesAt        Int?
   closesAtNextDay Boolean? @default(false)
-  outlet          Outlet   @relation(fields: [outletId], references: [id], onDelete: Cascade)
-  outletId        String   @map("outlet_id") @db.ObjectId
-
-  @@unique([outletId, weekday])
-  @@index([outletId])
 }
 
-model SunlightHour {
-  id                 String               @id @default(auto()) @map("_id") @db.ObjectId
+type SunlightHour {
+  id                 String               @map("_id") @db.ObjectId
   // store full period as one string to debug, e.g. 01/01 - 07/01
   period             String
   // store begin and end date as day number, e.g. 1 - 7
@@ -64,27 +59,17 @@ model SunlightHour {
   end                Int
   createdAt          String
   updatedAt          String
-  Outlet             Outlet?              @relation(fields: [outletId], references: [id])
-  outletId           String?              @db.ObjectId
   OutletSunlightHour OutletSunlightHour[]
-
-  @@unique([id, outletId])
-  @@index([outletId])
 }
 
-model OutletSunlightHour {
-  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+type OutletSunlightHour {
+  id       String @map("_id") @db.ObjectId
   // store begin and end time as a full string to debug, e.g. 10:00 - 18:00
-  hours          String
+  hours    String
   // store begin and end time as seconds elapsed since midnight, e.g. 36000 - 64800
-  start          Int
-  end            Int
-  sunshine       Int
-  sunlightHour   SunlightHour @relation(fields: [sunlightHourId], references: [id], onDelete: Cascade)
-  sunlightHourId String       @map("sunlight_hour_id") @db.ObjectId
-
-  @@unique([id, sunlightHourId])
-  @@index([sunlightHourId])
+  start    Int
+  end      Int
+  sunshine Int
 }
 
 // next auth models
