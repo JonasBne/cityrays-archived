@@ -5,7 +5,14 @@
 
 import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
-import { format, getDay, getDayOfYear, parse, parseISO } from "date-fns";
+import {
+  format,
+  getDay,
+  getDayOfYear,
+  getSeconds,
+  parse,
+  parseISO,
+} from "date-fns";
 import ObjectID from "bson-objectid";
 import { get } from "node:http";
 
@@ -282,8 +289,9 @@ export const createOutletSunlightHoursInput = (
           if (currentTimestampPair) {
             return {
               id: ObjectID().toHexString(),
-              startTime: currentTimestampPair.startTime,
-              endTime: currentTimestampPair.endTime,
+              hours: `${currentTimestampPair.startTime}-${currentTimestampPair.endTime}`,
+              start: getSecondsSinceMidgnight(currentTimestampPair.startTime),
+              end: getSecondsSinceMidgnight(currentTimestampPair.endTime),
               sunshine: value,
             };
           }
@@ -300,7 +308,7 @@ export const createOutletSunlightHoursInput = (
       id: ObjectID().toHexString(),
       period,
       start: startDateWeekdayNumber,
-      end: endDateWeekdayNumber
+      end: endDateWeekdayNumber,
       outletSunlightHours,
     };
 
@@ -363,8 +371,6 @@ export const parseFile = async (filePath: string) => {
   );
 
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
-
-  // console.log(outletInput);
 
   // return await upsertOutlet(outletInput);
 };

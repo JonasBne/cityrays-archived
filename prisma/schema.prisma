@@ -49,13 +49,11 @@ type OpeningHour {
 }
 
 type SunlightHour {
-  id                 String               @db.ObjectId
-  period             String // format 01/01-07/01 to allow easier debugging
-  start              Int // day of year
-  end                Int // day of year
-  createdAt          String
-  updatedAt          String
-  OutletSunlightHour OutletSunlightHour[]
+  id                  String               @db.ObjectId
+  period              String // format 01/01-07/01 to allow easier debugging
+  start               Int // day of year
+  end                 Int // day of year
+  outletSunlightHours OutletSunlightHour[]
 }
 
 type OutletSunlightHour {
