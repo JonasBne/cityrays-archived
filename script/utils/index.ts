@@ -58,70 +58,24 @@ interface TimestampPair {
 
 const startRow = 2;
 const endRow = 54;
-const sunlightHoursDataColumns = [
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "O",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "T",
-  "U",
-  "V",
-  "W",
-  "X",
-  "Y",
-  "Z",
-  "AA",
-  "AB",
-  "AC",
-  "AD",
-  "AE",
-  "AF",
-  "AG",
-  "AH",
-  "AI",
-  "AJ",
-  "AK",
-  "AL",
-  "AM",
-  "AN",
-  "AO",
-  "AP",
-  "AQ",
-  "AR",
-  "AS",
-  "AT",
-  "AU",
-  "AV",
-  "AW",
-  "AX",
-  "AY",
-  "AZ",
-  "BA",
-  "BB",
-  "BC",
-  "BD",
-  "BE",
-  "BF",
-  "BG",
-  "BH",
-  "BI",
-  "BJ",
-  "BK",
-  "BL",
-];
+
+const calcSunlightHoursColumns = (
+  startColumn: string,
+  numberOfColumns: number
+) => {
+  const baseCharCode = startColumn.charCodeAt(0);
+  const columns = [];
+
+  for (let i = 0; i < numberOfColumns; i++) {
+    const charCode = baseCharCode + i;
+    const column = String.fromCharCode(charCode);
+    columns.push(column);
+  }
+
+  return columns;
+};
+
+const sunlightHoursDataColumns = calcSunlightHoursColumns("C", 62);
 
 /**
  * prisma client
