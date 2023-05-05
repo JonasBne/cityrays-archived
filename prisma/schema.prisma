@@ -29,8 +29,8 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  latitude      Int
-  longitude     Int
+  latitude      Float
+  longitude     Float
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
   createdAt     String
@@ -40,7 +40,7 @@ model Outlet {
 }
 
 type OpeningHour {
-  id              String   @db.ObjectId
+  id              String    @map("_id") @db.ObjectId
   weekday         String
   openingHours    String? // format 10:00-18:00 to allow easier debugging
   openAt          Int? // seconds since midgnight to allow easier queries
@@ -49,7 +49,7 @@ type OpeningHour {
 }
 
 type SunlightHour {
-  id                  String               @db.ObjectId
+  id              String    @map("_id") @db.ObjectId
   period              String // format 01/01-07/01 to allow easier debugging
   start               Int // day of year
   end                 Int // day of year
@@ -57,7 +57,7 @@ type SunlightHour {
 }
 
 type OutletSunlightHour {
-  id       String @db.ObjectId
+  id              String    @map("_id") @db.ObjectId
   hours    String // format 10:00-18:00 to allow easier debugging
   start    Int // seconds since midnight to allow easier queries
   end      Int // seconds since midnight to allow easier queries

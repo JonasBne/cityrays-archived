@@ -5,16 +5,8 @@
 
 import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
-import {
-  format,
-  getDay,
-  getDayOfYear,
-  getSeconds,
-  parse,
-  parseISO,
-} from "date-fns";
+import { format, getDayOfYear, parse } from "date-fns";
 import ObjectID from "bson-objectid";
-import { get } from "node:http";
 
 /**
  * types
@@ -212,7 +204,9 @@ export const createOutletOpeningHoursInput = (
         id: ObjectID().toHexString(),
         weekday,
         openingHours: openAt && closesAt ? `${openAt}-${closesAt}` : null,
+        // fix the seconds since midnight here
         openAt: openAt || null,
+        // fix the seconds since midnight here
         closesAt: closesAt || null,
         closesAtNextDay,
       };
@@ -221,6 +215,9 @@ export const createOutletOpeningHoursInput = (
     }
     return acc;
   }, [] as Prisma.OpeningHourCreateInput[]);
+
+  // TODO: figure out why it does not work if there is only 1 openingHours object
+  // it's because the hours are still strings
 
   // create new object, don't modify the original
   return {
@@ -322,32 +319,21 @@ export const createOutletSunlightHoursInput = (
 };
 
 const upsertOutlet = async (outletInput: Prisma.OutletCreateInput) => {
-  const outlets = await prisma.outlet.findMany();
+  // when we update an existing input we do not want to pass a newly createdAt field
+  // it should keep the initial value
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { createdAt, ...input } = outletInput;
 
-  const existingOutlet = outlets.find(
-    (outlet) =>
-      // @ts-ignore
-      outlet.location.coordinates[0] === outletInput.location.coordinates[0] &&
-      // @ts-ignore
-      outlet.location.coordinates[1] === outletInput.location.coordinates[1]
-  );
-
-  if (existingOutlet) {
-    // remove the createdAt field from the input
-    // for existing outlets
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { createdAt, ...input } = outletInput;
-
-    await prisma.outlet.update({
-      where: {
-        id: existingOutlet.id,
+  await prisma.outlet.upsert({
+    where: {
+      latitude_longitude: {
+        latitude: outletInput.latitude,
+        longitude: outletInput.longitude,
       },
-      data: input,
-    });
-    return;
-  }
-
-  await prisma.outlet.create({ data: outletInput });
+    },
+    create: outletInput,
+    update: input,
+  });
 };
 
 export const parseFile = async (filePath: string) => {
@@ -372,5 +358,5 @@ export const parseFile = async (filePath: string) => {
 
   outletInput = createOutletSunlightHoursInput(sheet, outletInput);
 
-  // return await upsertOutlet(outletInput);
+  return await upsertOutlet(outletInput);
 };
