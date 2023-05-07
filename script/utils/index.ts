@@ -59,17 +59,34 @@ interface TimestampPair {
 const startRow = 2;
 const endRow = 54;
 
-const getSunlightHourColumns = (
+export const getSunlightHourColumns = (
   startColumn: string,
   numberOfColumns: number
 ) => {
-  const baseCharCode = startColumn.charCodeAt(0);
-  const columns = [];
+  const columns: Array<string> = [];
 
   for (let i = 0; i < numberOfColumns; i++) {
+    const baseCharCode = startColumn.charCodeAt(0);
     const charCode = baseCharCode + i;
-    const column = String.fromCharCode(charCode);
-    columns.push(column);
+    console.log(i);
+
+    // for all letters between A and Z
+    if (charCode <= 90) {
+      const column = String.fromCharCode(charCode);
+      columns.push(column);
+    }
+    // now we need to start making combinations starting again from A, e.g. AA, AB, AC, etc.
+    if (charCode > 90 && charCode <= 116) {
+      const diff = charCode - 91;
+      const column = String.fromCharCode(65) + String.fromCharCode(65 + diff);
+      columns.push(column);
+    }
+
+    if (charCode >= 117 && charCode <= 142) {
+      const diff = charCode - 117;
+      const column = String.fromCharCode(66) + String.fromCharCode(66 + diff);
+      columns.push(column);
+    }
   }
 
   return columns;

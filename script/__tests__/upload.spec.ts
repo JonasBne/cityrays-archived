@@ -126,6 +126,7 @@ describe("upload script", () => {
     expect(finalCreateOutletPayload.sunlightHours).toBeDefined();
     // 52 objects, each representing one week of the year
     expect(finalCreateOutletPayload.sunlightHours.length).toBe(52);
+    // 61 timestamp pairs for each week (from 07:00 to 22:15)
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours.length
     ).toBe(61);
