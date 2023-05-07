@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, publicProcedure } from "../trpc";
-import { getAllOpen, getAllSunny } from "../utils/outlet";
+// import { getAllOpen, getAllSunny } from "../utils/outlet";
 
 export const outletRouter = createTRPCRouter({
   getById: publicProcedure
@@ -20,7 +20,7 @@ export const outletRouter = createTRPCRouter({
   getAllOpen: publicProcedure.query(async ({ ctx }) => {
     try {
       const outlets = await ctx.prisma.outlet.findMany();
-      return getAllOpen(outlets);
+      // return getAllOpen(outlets);
     } catch (error) {
       console.log("error", error);
     }
@@ -28,8 +28,8 @@ export const outletRouter = createTRPCRouter({
   getAllSunny: publicProcedure.query(async ({ ctx }) => {
     try {
       const outlets = await ctx.prisma.outlet.findMany();
-      const openOutlets = getAllOpen(outlets);
-      return getAllSunny(openOutlets);
+      // const openOutlets = getAllOpen(outlets);
+      // return getAllSunny(openOutlets);
     } catch (error) {
       console.log("error", error);
     }
