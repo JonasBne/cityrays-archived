@@ -7,14 +7,15 @@ import {
   createOutletAddressInformationInput,
   createOutletOpeningHoursInput,
   createOutletSunlightHoursInput,
+  getSecondsSinceMidgnight,
   outletAddressProperties,
   outletOpeningHoursProperties,
 } from "script/utils";
 import * as xlsx from "xlsx";
+import { getDayOfYear, parse } from "date-fns";
 
 // keep track of the final input payload so we are sure at the end if we have created the correct final
 // object payload because all the util functions are chained
-
 let createOutletPayload: Prisma.OutletCreateInput;
 
 // restore the object after the entire test suite
@@ -45,7 +46,8 @@ describe("upload script", () => {
       houseNumber: 43,
       zipCode: 2000,
       category: "cafe",
-      location: { type: "MultiPoint", coordinates: [4.40443, 51.22143] },
+      latitude: 51.22143,
+      longitude: 4.40443,
     });
   });
 
@@ -56,29 +58,34 @@ describe("upload script", () => {
       outletOpeningHoursProperties
     );
 
+    // TODO: add extra test cases in case of multiple openinghours per day
     const openingHoursPayload = [
       {
         weekday: "monday",
+        openingHours: null,
         openAt: null,
         closesAt: null,
         closesAtNextDay: false,
       },
       {
         weekday: "tuesday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00 - 00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "wednesday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00 - 00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "thursday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00 - 00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
@@ -89,14 +96,16 @@ describe("upload script", () => {
       },
       {
         weekday: "saturday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00 - 00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "sunday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00 - 00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
     ];
@@ -112,28 +121,33 @@ describe("upload script", () => {
       createOutletPayload
     );
 
-    // 52 objects, each representing one week of the year
+    console.log(finalCreateOutletPayload.sunlightHours[0].outletSunlightHours);
+
     expect(finalCreateOutletPayload.sunlightHours).toBeDefined();
+    // 52 objects, each representing one week of the year
     expect(finalCreateOutletPayload.sunlightHours.length).toBe(52);
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours.length
     ).toBe(61);
     expect(finalCreateOutletPayload.sunlightHours[0]).toMatchObject({
-      startDate: "01/01/2022",
-      endDate: "07/01/2022",
+      period: "01/01/2022-07/01/2022",
+      start: getDayOfYear(parse("01/01/2022", "dd/MM/yyyy", new Date())),
+      end: getDayOfYear(parse("07/01/2022", "dd/MM/yyyy", new Date())),
     });
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours[0]
     ).toMatchObject({
-      startTime: "7:00",
-      endTime: "7:15",
+      hours: "7:00-7:15",
+      start: getSecondsSinceMidgnight("7:00"),
+      end: getSecondsSinceMidgnight("7:15"),
       sunshine: 0,
     });
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours[11]
     ).toMatchObject({
-      startTime: "9:45",
-      endTime: "10:00",
+      hours: "9:45-10:00",
+      start: getSecondsSinceMidgnight("9:45"),
+      end: getSecondsSinceMidgnight("10:00"),
       sunshine: 1,
     });
   });
