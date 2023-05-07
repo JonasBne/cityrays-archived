@@ -3,7 +3,7 @@
 ## Description
 
 This repository contains the code for the [CityRays app](https://cityrays.vercel.app/). This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
-For more technical information please refer to the [guidelines]('./GUIDELINES.md').
+For more technical information please refer to the [guidelines](./docs/GUIDELINES.md).
 
 ## Stack
 
