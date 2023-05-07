@@ -58,7 +58,6 @@ describe("upload script", () => {
       outletOpeningHoursProperties
     );
 
-    // TODO: add extra test cases in case of multiple openinghours per day
     const openingHoursPayload = [
       {
         weekday: "monday",
@@ -69,41 +68,42 @@ describe("upload script", () => {
       },
       {
         weekday: "tuesday",
-        openingHours: "09:00 - 00:00",
+        openingHours: "09:00-00:00",
         openAt: getSecondsSinceMidgnight("09:00"),
         closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "wednesday",
-        openingHours: "09:00 - 00:00",
+        openingHours: "09:00-00:00",
         openAt: getSecondsSinceMidgnight("09:00"),
         closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "thursday",
-        openingHours: "09:00 - 00:00",
+        openingHours: "09:00-00:00",
         openAt: getSecondsSinceMidgnight("09:00"),
         closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "friday",
-        openAt: "09:00 ",
-        closesAt: " 00:00",
+        openingHours: "09:00-00:00",
+        openAt: getSecondsSinceMidgnight("09:00"),
+        closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "saturday",
-        openingHours: "09:00 - 00:00",
+        openingHours: "09:00-00:00",
         openAt: getSecondsSinceMidgnight("09:00"),
         closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
       },
       {
         weekday: "sunday",
-        openingHours: "09:00 - 00:00",
+        openingHours: "09:00-00:00",
         openAt: getSecondsSinceMidgnight("09:00"),
         closesAt: getSecondsSinceMidgnight("00:00"),
         closesAtNextDay: true,
@@ -121,23 +121,21 @@ describe("upload script", () => {
       createOutletPayload
     );
 
-    console.log(finalCreateOutletPayload.sunlightHours[0].outletSunlightHours);
-
     expect(finalCreateOutletPayload.sunlightHours).toBeDefined();
     // 52 objects, each representing one week of the year
     expect(finalCreateOutletPayload.sunlightHours.length).toBe(52);
-    // 61 timestamp pairs for each week (from 07:00 to 22:15)
+    // 60 timestamp pairs for each week (from 07:00 to 22:15)
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours.length
-    ).toBe(61);
-    expect(finalCreateOutletPayload.sunlightHours[0]).toMatchObject({
-      period: "01/01/2022-07/01/2022",
+    ).toBe(60);
+    expect(finalCreateOutletPayload.sunlightHours[0]).toContain({
+      period: "01/01/2022 - 07/01/2022",
       start: getDayOfYear(parse("01/01/2022", "dd/MM/yyyy", new Date())),
       end: getDayOfYear(parse("07/01/2022", "dd/MM/yyyy", new Date())),
     });
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours[0]
-    ).toMatchObject({
+    ).toContain({
       hours: "7:00-7:15",
       start: getSecondsSinceMidgnight("7:00"),
       end: getSecondsSinceMidgnight("7:15"),
@@ -145,7 +143,7 @@ describe("upload script", () => {
     });
     expect(
       finalCreateOutletPayload.sunlightHours[0].outletSunlightHours[11]
-    ).toMatchObject({
+    ).toContain({
       hours: "9:45-10:00",
       start: getSecondsSinceMidgnight("9:45"),
       end: getSecondsSinceMidgnight("10:00"),

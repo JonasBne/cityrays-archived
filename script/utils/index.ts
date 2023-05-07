@@ -68,7 +68,6 @@ export const getSunlightHourColumns = (
   for (let i = 0; i < numberOfColumns; i++) {
     const baseCharCode = startColumn.charCodeAt(0);
     const charCode = baseCharCode + i;
-    console.log(i);
 
     // for all letters between A and Z
     if (charCode <= 90) {

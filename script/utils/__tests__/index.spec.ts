@@ -17,7 +17,6 @@ describe("upload utils", () => {
   describe("getSunlightHourColumns", () => {
     it("returns an array of columns with the correct lenght", () => {
       const columns = getSunlightHourColumns("C", 61);
-      console.log(columns);
       expect(columns).toHaveLength(61);
       expect(columns.shift()).toBe("C");
       expect(columns.pop()).toBe("BL");
@@ -35,6 +34,7 @@ describe("upload utils", () => {
     describe("getTimestampPairs", () => {
       it("returns the correct number of timestamp pairs", () => {
         const timestampPairs = getTimestampPairs(mockSheet);
+        expect(timestampPairs).toHaveLength(60);
       });
     });
   });
