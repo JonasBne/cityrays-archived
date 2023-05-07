@@ -204,10 +204,8 @@ export const createOutletOpeningHoursInput = (
         id: ObjectID().toHexString(),
         weekday,
         openingHours: openAt && closesAt ? `${openAt}-${closesAt}` : null,
-        // fix the seconds since midnight here
-        openAt: openAt || null,
-        // fix the seconds since midnight here
-        closesAt: closesAt || null,
+        openAt: openAt ? getSecondsSinceMidgnight(openAt) : null,
+        closesAt: closesAt ? getSecondsSinceMidgnight(closesAt) : null,
         closesAtNextDay,
       };
       // @ts-ignore
@@ -215,9 +213,6 @@ export const createOutletOpeningHoursInput = (
     }
     return acc;
   }, [] as Prisma.OpeningHourCreateInput[]);
-
-  // TODO: figure out why it does not work if there is only 1 openingHours object
-  // it's because the hours are still strings
 
   // create new object, don't modify the original
   return {
