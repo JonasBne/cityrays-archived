@@ -1,3 +1,5 @@
+// temporary fix to suppress error during build
+export const obj = {};
 // import { type Outlet } from "@prisma/client";
 // import { format, intervalToDuration, isWithinInterval } from "date-fns";
 
