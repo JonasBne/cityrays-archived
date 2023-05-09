@@ -8,17 +8,7 @@ We're trying to come up with a solution that will put an end to your terrace tro
 
 While this idea isn't entirely new, we're taking a fresh approach. Most existing applications provide users with shadow maps to find sunny spots, but we want to make things easier. Our app will show you all the sunny places in your area, and even let you know how much sunshine you can expect at each spot. You can choose between fully sunny or partly sunny terraces, depending on your preference.
 
-Of course, data is the key to making this work. We need information about the location of bars and restaurants, the size and orientation of their terraces, and the surrounding buildings and trees that could affect sunshine. We also need to factor in the position of the sun at any given day and time. At this moment, we don't have the resources to tackle the complexities of gathering all the necessary data automatically. The quality of our data heavily depends on the available building information. Unfortunately, there are limited free resources that offer reliable data. We attempted to generate our own shademaps using OSM Buildings, but encountered accuracy issues due to the lack of information about buildings in some areas. We have ruled out paying for providers to access more current data due to budget constraints. Instead, we're manually gathering data by checking for each week, in intervals of 15 minutes, how much sunshine there is on a terrace. It's definitely a time-consuming task, but we believe it's worth it to deliver a reliable and accurate solution to our users. That's also why we focus exclusively on Antwerp for now.
-
-Our main motivation behind building this app is to have fun, learn new things and grow. We're passionate about exploring new possibilities and pushing our boundaries to deliver a unique experience to our users.
-
-We understand that there are challenges ahead of us, but we're excited to tackle them head-on and see how far we can go with this project. So get ready to enjoy sunny days to their fullest. Stay tuned for more updates on our progress!
-
-## Team
-
-- `Development`: Jonas Boone
-- `User experience & interface`: Toke Joos
-- `Product owner & data`: Sander Traa
+Get ready to enjoy sunny days to their fullest. Stay tuned for more updates on our progress!
 
 ## Documentation
 
