@@ -9,8 +9,6 @@
 /** @type {import("next").NextConfig} */
 const config = {
   reactStrictMode: true,
-  // https://github.com/vercel/next.js/discussions/34249
-  pageExtensions: ["page.tsx", "route.ts"],
 
   /**
    * If you have the "experimental: { appDir: true }" setting enabled, then you

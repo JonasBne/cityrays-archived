@@ -20,6 +20,7 @@ export const outletRouter = createTRPCRouter({
   getAllOpen: publicProcedure.query(async ({ ctx }) => {
     try {
       const outlets = await ctx.prisma.outlet.findMany();
+      console.log("here");
       // return getAllOpen(outlets);
     } catch (error) {
       console.log("error", error);
