@@ -18,7 +18,6 @@ describe("Home page", () => {
     await waitFor(() => {
       const element = screen.getByText("No outlets found");
       expect(element).toBeInTheDocument();
-      screen.debug();
     });
   });
 
@@ -42,7 +41,6 @@ describe("Home page", () => {
 
       const outlet2 = screen.getByText("outlet 2");
       expect(outlet2).toBeInTheDocument();
-      screen.debug();
     });
   });
 });
