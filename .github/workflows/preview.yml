@@ -1,7 +1,7 @@
 name: Vercel Preview Deployment
 env:
-  # only the vercel token should be added to the github secrets
-  # all the other env variables are fetched from the vercel config
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   SKIP_ENV_VALIDATION: true
 on:
   push:
