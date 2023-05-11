@@ -1,7 +1,7 @@
 name: Vercel Preview Deployment
 env:
-  # only the vercel token should be added to the github secrets
-  # all the other env variables are fetched from the vercel config
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
   SKIP_ENV_VALIDATION: true
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
   Deploy-Preview:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
       - name: Pull Vercel Environment Information

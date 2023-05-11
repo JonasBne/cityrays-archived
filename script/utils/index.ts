@@ -7,6 +7,7 @@ import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
 import { format, getDayOfYear, parse } from "date-fns";
 import ObjectID from "bson-objectid";
+import { getSecondsSinceMidgnight } from "@/utils/time";
 
 /**
  * types
@@ -102,14 +103,6 @@ const prisma = new PrismaClient();
 /**
  * helper functions
  */
-
-export const getSecondsSinceMidgnight = (time: string) => {
-  const [hours, minutes] = time.split(":");
-  const hoursInSeconds = Number(hours) * 60 * 60;
-  const minutesInSeconds = Number(minutes) * 60;
-
-  return hoursInSeconds + minutesInSeconds;
-};
 
 export const createOutletAddressInformationInput = (
   sheet: xlsx.WorkSheet,
