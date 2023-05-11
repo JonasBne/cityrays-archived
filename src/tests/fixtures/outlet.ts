@@ -1,6 +1,6 @@
+import { getSecondsSinceMidgnight } from "@/utils/time";
 import { type Outlet } from "@prisma/client";
 import { getDayOfYear, parse } from "date-fns";
-import { getSecondsSinceMidgnight } from "script/utils";
 
 export const outletSingle = (): Outlet => {
   return {

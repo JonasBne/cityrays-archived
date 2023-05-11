@@ -7,12 +7,12 @@ import {
   createOutletAddressInformationInput,
   createOutletOpeningHoursInput,
   createOutletSunlightHoursInput,
-  getSecondsSinceMidgnight,
   outletAddressProperties,
   outletOpeningHoursProperties,
 } from "script/utils";
 import * as xlsx from "xlsx";
 import { getDayOfYear, parse } from "date-fns";
+import { getSecondsSinceMidgnight } from "@/utils/time";
 
 // keep track of the final input payload so we are sure at the end if we have created the correct final
 // object payload because all the util functions are chained
