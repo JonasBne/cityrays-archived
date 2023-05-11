@@ -2,7 +2,7 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
   // https://stackoverflow.com/questions/74765804/deploy-nextjs-prisma-to-vercel-from-github-actions
   // https://www.prisma.io/docs/concepts/components/prisma-schema/generators
   binaryTargets = ["native", "rhel-openssl-1.0.x"]
@@ -25,40 +25,46 @@ model Outlet {
   city          String
   zipCode       Int
   category      String
-  location      Json @unique
+  latitude      Float
+  longitude     Float
   openingHours  OpeningHour[]
   sunlightHours SunlightHour[]
-  createdAt String
-  updatedAt String
+  createdAt     String
+  updatedAt     String
+
+  @@unique([latitude, longitude])
 }
 
 type OpeningHour {
-  id       String
-  weekday  String
-  openAt   String?
-  closesAt String?
+  id              String    @map("_id") @db.ObjectId
+  weekday         String
+  openingHours    String? // format 10:00-18:00 to allow easier debugging
+  openAt          Int? // seconds since midgnight to allow easier queries
+  closesAt        Int? // seconds since midnight to allow easier queries
   closesAtNextDay Boolean? @default(false)
 }
 
 type SunlightHour {
-  id                  String
-  startDate           String
-  endDate             String
+  id              String    @map("_id") @db.ObjectId
+  period              String // format 01/01-07/01 to allow easier debugging
+  start               Int // day of year
+  end                 Int // day of year
   outletSunlightHours OutletSunlightHour[]
 }
 
 type OutletSunlightHour {
-  id        String
-  startTime String
-  endTime   String
-  sunShine  Int
+  id              String    @map("_id") @db.ObjectId
+  hours    String // format 10:00-18:00 to allow easier debugging
+  start    Int // seconds since midnight to allow easier queries
+  end      Int // seconds since midnight to allow easier queries
+  sunshine Int
 }
 
 // next auth models
 
 model Account {
   id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String
+  userId            String  @db.ObjectId
   type              String
   provider          String
   providerAccountId String
@@ -69,16 +75,19 @@ model Account {
   scope             String?
   id_token          String? @db.String
   session_state     String?
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([provider, providerAccountId])
 }
+
 model Session {
   id           String   @id @default(auto()) @map("_id") @db.ObjectId
   sessionToken String   @unique
-  userId       String
+  userId       String   @db.ObjectId
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
 model User {
   id            String    @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
@@ -88,9 +97,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 }
+
 model VerificationToken {
   identifier String   @id @default(auto()) @map("_id") @db.ObjectId
   token      String   @unique
   expires    DateTime
+
   @@unique([identifier, token])
 }

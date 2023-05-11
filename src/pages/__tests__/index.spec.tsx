@@ -1,6 +1,6 @@
 import { server, trpc } from "@/tests/mockServer";
 import { render, screen, waitFor } from "@/tests/render";
-import Home from "..";
+import Home from "../index.page";
 
 describe("Home page", () => {
   it("renders a loading state while data is being loaded", async () => {
@@ -18,7 +18,6 @@ describe("Home page", () => {
     await waitFor(() => {
       const element = screen.getByText("No outlets found");
       expect(element).toBeInTheDocument();
-      screen.debug();
     });
   });
 
@@ -42,7 +41,6 @@ describe("Home page", () => {
 
       const outlet2 = screen.getByText("outlet 2");
       expect(outlet2).toBeInTheDocument();
-      screen.debug();
     });
   });
 });

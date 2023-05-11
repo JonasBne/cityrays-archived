@@ -5,8 +5,9 @@
 
 import * as xlsx from "xlsx";
 import { type Prisma, PrismaClient } from "@prisma/client";
-import { v4 as uuidv4 } from "uuid";
-import { format } from "date-fns";
+import { format, getDayOfYear, parse } from "date-fns";
+import ObjectID from "bson-objectid";
+import { getSecondsSinceMidgnight } from "@/utils/time";
 
 /**
  * types
@@ -58,70 +59,40 @@ interface TimestampPair {
 
 const startRow = 2;
 const endRow = 54;
-const sunlightHoursDataColumns = [
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "O",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "T",
-  "U",
-  "V",
-  "W",
-  "X",
-  "Y",
-  "Z",
-  "AA",
-  "AB",
-  "AC",
-  "AD",
-  "AE",
-  "AF",
-  "AG",
-  "AH",
-  "AI",
-  "AJ",
-  "AK",
-  "AL",
-  "AM",
-  "AN",
-  "AO",
-  "AP",
-  "AQ",
-  "AR",
-  "AS",
-  "AT",
-  "AU",
-  "AV",
-  "AW",
-  "AX",
-  "AY",
-  "AZ",
-  "BA",
-  "BB",
-  "BC",
-  "BD",
-  "BE",
-  "BF",
-  "BG",
-  "BH",
-  "BI",
-  "BJ",
-  "BK",
-  "BL",
-];
+
+export const getSunlightHourColumns = (
+  startColumn: string,
+  numberOfColumns: number
+) => {
+  const columns: Array<string> = [];
+
+  for (let i = 0; i < numberOfColumns; i++) {
+    const baseCharCode = startColumn.charCodeAt(0);
+    const charCode = baseCharCode + i;
+
+    // for all letters between A and Z
+    if (charCode <= 90) {
+      const column = String.fromCharCode(charCode);
+      columns.push(column);
+    }
+    // now we need to start making combinations starting again from A, e.g. AA, AB, AC, etc.
+    if (charCode > 90 && charCode <= 116) {
+      const diff = charCode - 91;
+      const column = String.fromCharCode(65) + String.fromCharCode(65 + diff);
+      columns.push(column);
+    }
+
+    if (charCode >= 117 && charCode <= 142) {
+      const diff = charCode - 117;
+      const column = String.fromCharCode(66) + String.fromCharCode(66 + diff);
+      columns.push(column);
+    }
+  }
+
+  return columns;
+};
+
+const sunlightHoursDataColumns = getSunlightHourColumns("C", 62);
 
 /**
  * prisma client
@@ -155,14 +126,10 @@ export const createOutletAddressInformationInput = (
     {} as Record<TAddressLabel, string | number | undefined>
   );
 
-  const location = {
-    type: "MultiPoint",
-    coordinates: [longitude, latitude],
-  };
-
   return {
     ...addressInformation,
-    location,
+    latitude,
+    longitude,
     createdAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
     updatedAt: format(new Date(), "yyyy-MM-dd HH:mm:ss"),
   } as Prisma.OutletCreateInput;
@@ -179,8 +146,10 @@ export const createOutletOpeningHoursInput = (
     const weekday = key as TWeekdaysLabel;
     const cell = value;
     const cellValue = (sheet[cell]?.v || null) as string | null;
+    const closesAtNextDay = (sheet[outletClosesNextDayProperties[weekday]]?.v ||
+      false) as boolean;
 
-    const openingHours = () => {
+    const getOpeningHours = () => {
       if (!cellValue) {
         return null;
       }
@@ -200,31 +169,52 @@ export const createOutletOpeningHoursInput = (
       return cellValue.split("-");
     };
 
-    const closesAtNextDay = (sheet[outletClosesNextDayProperties[weekday]]?.v ||
-      false) as boolean;
+    // returns an array of arrays, e.g. [['09:00', '12:00'], ['13:00', '18:00']] in case of multiple openingHours
+    // or [['09:00', '12:00']] in case of a single openingHours
+    const openingHours = getOpeningHours();
 
-    // if the length is four then it contains multiple hours for a given day
+    // if the length is four then it contains multiple hours for a given day, e.g. ['09:00', '12:00', '13:00', '18:00']
     // and then we create two objects instead of one, but just loop over the initial array
     // which contains two elements, each representing a pair of open and closing times
     // for that day
-    if (openingHours()?.flat().length === 4) {
-      openingHours()?.forEach((openingHoursPair) => {
+    const hasMultipleOpeningHours = openingHours?.flat().length === 4;
+
+    if (hasMultipleOpeningHours) {
+      openingHours.forEach((openingHoursPair) => {
+        const openingHours =
+          openingHoursPair[0] && openingHoursPair[1]
+            ? `${openingHoursPair[0]}-${openingHoursPair[1]}`
+            : null;
+
         const openingHour = {
-          id: uuidv4(),
+          id: ObjectID().toHexString(),
           weekday,
-          openAt: openingHoursPair[0] || null,
-          closesAt: openingHoursPair[1] || null,
+          openingHours,
+          openAt: openingHoursPair[0]
+            ? getSecondsSinceMidgnight(openingHoursPair[0])
+            : null,
+          closesAt: openingHoursPair[1]
+            ? getSecondsSinceMidgnight(openingHoursPair[1])
+            : null,
           closesAtNextDay,
         };
         // @ts-ignore
         acc.push(openingHour);
       });
     } else {
+      // we now for certain that's is just a single openingHours pair
+      // and hence can assert it's type
+      const openingHours = getOpeningHours() as Array<string> | null;
+      // remove all whitespace
+      const openAt = openingHours?.[0]?.replace(/\s/g, "") || null;
+      const closesAt = openingHours?.[1]?.replace(/\s/g, "") || null;
+
       const openingHour = {
-        id: uuidv4(),
+        id: ObjectID().toHexString(),
         weekday,
-        openAt: openingHours()?.[0] || null,
-        closesAt: openingHours()?.[1] || null,
+        openingHours: openAt && closesAt ? `${openAt}-${closesAt}` : null,
+        openAt: openAt ? getSecondsSinceMidgnight(openAt) : null,
+        closesAt: closesAt ? getSecondsSinceMidgnight(closesAt) : null,
         closesAtNextDay,
       };
       // @ts-ignore
@@ -273,9 +263,17 @@ export const createOutletSunlightHoursInput = (
 
   for (let i = startRow; i < endRow; i++) {
     // for each row determine the start and end period based on the year period columns
-
     const startDate = sheet[`A${i}`]?.w as string;
     const endDate = sheet[`B${i}`]?.w as string;
+    const period = `${startDate} - ${endDate}`;
+
+    // get number of day in the year (1-365)
+    const startDateWeekdayNumber = getDayOfYear(
+      parse(startDate, "dd/MM/yyyy", new Date())
+    );
+    const endDateWeekdayNumber = getDayOfYear(
+      parse(endDate, "dd/MM/yyyy", new Date())
+    );
 
     const outletSunlightHours = sunlightHoursDataColumns
       .map(
@@ -291,10 +289,11 @@ export const createOutletSunlightHoursInput = (
           // the first column has index 0 and that corresponds to index 0 in the timestampPairs array
           if (currentTimestampPair) {
             return {
-              id: uuidv4(),
-              startTime: currentTimestampPair.startTime,
-              endTime: currentTimestampPair.endTime,
-              sunShine: value,
+              id: ObjectID().toHexString(),
+              hours: `${currentTimestampPair.startTime}-${currentTimestampPair.endTime}`,
+              start: getSecondsSinceMidgnight(currentTimestampPair.startTime),
+              end: getSecondsSinceMidgnight(currentTimestampPair.endTime),
+              sunshine: value,
             };
           }
         }
@@ -307,9 +306,10 @@ export const createOutletSunlightHoursInput = (
       );
 
     const input: Prisma.SunlightHourCreateInput = {
-      id: uuidv4(),
-      startDate,
-      endDate,
+      id: ObjectID().toHexString(),
+      period,
+      start: startDateWeekdayNumber,
+      end: endDateWeekdayNumber,
       outletSunlightHours,
     };
 
@@ -323,32 +323,21 @@ export const createOutletSunlightHoursInput = (
 };
 
 const upsertOutlet = async (outletInput: Prisma.OutletCreateInput) => {
-  const outlets = await prisma.outlet.findMany();
+  // when we update an existing input we do not want to pass a newly createdAt field
+  // it should keep the initial value
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { createdAt, ...input } = outletInput;
 
-  const existingOutlet = outlets.find(
-    (outlet) =>
-      // @ts-ignore
-      outlet.location.coordinates[0] === outletInput.location.coordinates[0] &&
-      // @ts-ignore
-      outlet.location.coordinates[1] === outletInput.location.coordinates[1]
-  );
-
-  if (existingOutlet) {
-    // remove the createdAt field from the input
-    // for existing outlets
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { createdAt, ...input } = outletInput;
-
-    await prisma.outlet.update({
-      where: {
-        id: existingOutlet.id,
+  await prisma.outlet.upsert({
+    where: {
+      latitude_longitude: {
+        latitude: outletInput.latitude,
+        longitude: outletInput.longitude,
       },
-      data: input,
-    });
-    return;
-  }
-
-  await prisma.outlet.create({ data: outletInput });
+    },
+    create: outletInput,
+    update: input,
+  });
 };
 
 export const parseFile = async (filePath: string) => {
