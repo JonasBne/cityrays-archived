@@ -1,4 +1,3 @@
-import { SITE_TITLE } from "@/config";
 import React from "react";
 import Head from "next/head";
 import { Header } from "./Header";
@@ -7,6 +6,8 @@ interface IProps {
   children?: React.ReactNode;
   pageTitle: string;
 }
+
+const SITE_TITLE = (subTitle: string) => `CityRays • ${subTitle}`;
 
 export const Layout = ({ children, pageTitle }: IProps) => {
   return (

@@ -1,6 +1,6 @@
 import { server, trpc } from "@/tests/mockServer";
 import { render, screen, waitFor } from "@/tests/render";
-import Home from "../../pages";
+import Home from "../index.page";
 
 describe("Home page", () => {
   it("renders a loading state while data is being loaded", async () => {
