@@ -1,5 +1,9 @@
 # ☀️ CityRays
 
+## Repository development discontinued
+
+The development of this repository has come to an end. However, the development of CityRays will continue in a new repository with, amongst others, different technological choices. For the latest updates and ongoing development, please refer to the new [repository](https://github.com/JonasBne/cityrays).
+
 ## What's the idea?
 
 Have you ever found yourself in the dilemma of trying to find the perfect spot to enjoy a drink or meal on a sunny day, only to be left disappointed by the lack of sunlight on the terrace? Or on a scorching summer day, have you struggled to find a shaded spot to cool down?
